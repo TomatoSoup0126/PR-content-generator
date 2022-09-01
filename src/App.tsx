@@ -52,7 +52,6 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (jiraCommits.length > 0) {
-      console.log('jiraCommits change!')
       Promise.all(jiraCommits.map(commit => fetchJiraIssue(getJiraId(commit))))
         .then(data => {
           const excludeStatusList = ['CLOSED']
@@ -142,7 +141,6 @@ const App: React.FC = () => {
         }
       )
       const { fields } = await response.json()
-      console.log('res', fields)
       const data = {
         id: fields.key,
         subject: fields.summary,
@@ -156,12 +154,12 @@ const App: React.FC = () => {
     }
   }
 
-  const handleCopyRedmineIssues = (data) => {
+  const handleCopyRedmineIssues = () => {
     const copyContent = redmineIssues.map(issue => issue.markdown).join('\r\n')
     clipboard.writeText(copyContent)
   }
 
-  const handleCopyJiraIssues = (data) => {
+  const handleCopyJiraIssues = () => {
     const copyContent = jirIssues.map(issue => issue.markdown).join('\r\n')
     clipboard.writeText(copyContent)
   }

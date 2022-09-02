@@ -5,6 +5,8 @@
 - Fetch branch diff by github api
 - Fetch issues on Jira and Redmine issue api
 - Export issues to markdown
+
+![screenshot.png](https://github.com/TomatoSoup0126/PR-content-generator/tree/master/public/screenshot.png)
 ## Quick start
 
 ```sh

@@ -18,6 +18,36 @@ import Divider from '@mui/material/Divider'
 import LinearProgress from '@mui/material/LinearProgress'
 import { clipboard } from 'electron'
 
+interface LoadingStatus {
+  showResultBlock: String
+  isGithubLoading: String
+  isRedmineLoading: String
+  isJiraLoading: String
+}
+
+interface Option {
+  owner: String
+  repo: String
+  githubToken: String
+  redmineToken: String
+  redminePath: String
+  jiraAccount: String
+  jiraToken: String
+  jiraPath: String
+}
+
+interface Branch {
+  into: String
+  from: String
+}
+
+interface Commit {
+  id: any
+  subject: any
+  status: any
+  markdown: String
+}
+
 const App: React.FC = () => {
   const [option, setOption] = useState({
     owner: '',
@@ -35,10 +65,10 @@ const App: React.FC = () => {
     from: 'dev'
   })
 
-  const [jiraCommits, setJiraCommits] = useState([])
-  const [jirIssues, setJirIssues] = useState([])
-  const [redmineCommits, setRedmineCommits] = useState([])
-  const [redmineIssues, setRedmineIssues] = useState([])
+  const [jiraCommits, setJiraCommits] = useState<String[] | undefined[]>([])
+  const [jirIssues, setJirIssues] = useState<Commit[] | undefined[]>([])
+  const [redmineCommits, setRedmineCommits] = useState<String[] | undefined[]>([])
+  const [redmineIssues, setRedmineIssues] = useState<Commit[] | undefined[]>([])
 
   const [loadingStatus, setloadingStatus] = useState({
     showResultBlock: true,
@@ -47,7 +77,7 @@ const App: React.FC = () => {
     isJiraLoading: false
   })
 
-  const changeLoadingStatus = (key:String, value:Boolean) => {
+  const changeLoadingStatus = (key: keyof LoadingStatus, value:boolean) => {
     const updateLoadingStatus = {
       ...loadingStatus
     }
@@ -65,10 +95,11 @@ const App: React.FC = () => {
   useEffect(() => {
     if (redmineCommits.length > 0) {
       changeLoadingStatus('isRedmineLoading', true)
-      Promise.all(redmineCommits.map(commit => fetchRedmineIssue(getRedmineId(commit))))
+      Promise.all(redmineCommits.map(commit => fetchRedmineIssue(getRedmineId(`${commit}`))))
         .then(data => {
           const excludeStatusList = ['Close', 'On Production']
-          const sortedData = data.sort((a, b) => a.id - b.id).filter(item => !excludeStatusList.some(status => status === item.status))
+          const sortedData = data.sort((a, b) => a?.id - b?.id).filter(item => !excludeStatusList.some(status => status === item?.status))
+          // @ts-ignore
           setRedmineIssues(sortedData)
           changeLoadingStatus('isRedmineLoading', false)
         })
@@ -80,10 +111,11 @@ const App: React.FC = () => {
   useEffect(() => {
     if (jiraCommits.length > 0) {
       changeLoadingStatus('isJiraLoading', true)
-      Promise.all(jiraCommits.map(commit => fetchJiraIssue(getJiraId(commit))))
+      Promise.all(jiraCommits.map(commit => fetchJiraIssue(getJiraId(`${commit}`))))
         .then(data => {
           const excludeStatusList = ['CLOSED']
-          const sortedData = data.sort((a, b) => a.id - b.id).filter(item => !excludeStatusList.some(status => status === item.status))
+          const sortedData = data.sort((a, b) => a?.id - b?.id).filter(item => !excludeStatusList.some(status => status === item?.status))
+          // @ts-ignore
           setJirIssues(sortedData)
           changeLoadingStatus('isJiraLoading', false)
         })
@@ -94,33 +126,39 @@ const App: React.FC = () => {
 
   const branchOption = ['dev', 'release', 'master']
 
-  const jiraPattern = /\[([a-zA-Z\s]+)-\d{4}\]/ // [OW-1234]
+  const jiraPattern: RegExp = /\[([a-zA-Z\s]+)-\d{4}\]/ // [OW-1234]
   const matchJiraPatternCommit = (commits:String[]) => {
     return commits.filter(commit => commit.match(jiraPattern))
   }
-  const getJiraId = (commit:String) => {
-    if (commit.match(jiraPattern)) {
-      return commit.match(jiraPattern)[0].match(/[a-zA-Z\s]+-\d{4}/gm)
+  const getJiraId = (commit: string) => {
+    const match = commit.match(jiraPattern)
+    if (match) {
+      return `${match[0].match(/[a-zA-Z\s]+-\d{4}/gm)}`
+    } else {
+      return ''
     }
   }
 
-  const redminePattern = /\([a-z:]+ #\d{4}\)/ // done #1234
+  const redminePattern: RegExp = /\([a-z:]+ #\d{4}\)/ // done #1234
   const matchRedminePatternCommit = (commits:String[]) => {
     return commits.filter(commit => commit.match(redminePattern))
   }
-  const getRedmineId = (commit:String) => {
-    if (commit.match(redminePattern)) {
-      return commit.match(redminePattern)[0].match(/\d{4}/gm)
+  const getRedmineId = (commit: string) => {
+    const match = commit.match(redminePattern)
+    if (match) {
+      return `${match[0].match(/\d{4}/gm)?.[0]}`
+    } else {
+      return ''
     }
   }
 
-  const handleInput = (value:String, key:String) => {
+  const handleInput = (value:string, key:keyof Option) => {
     const updateOption = {...option}
     updateOption[key] = value
     setOption(updateOption)
   }
 
-  const handleBranchChange = (value:String, key:String) => {
+  const handleBranchChange = (value:string, key:keyof Branch) => {
     const updateBranch = {...branch}
     updateBranch[key] = value
     setBranch(updateBranch)
@@ -139,7 +177,7 @@ const App: React.FC = () => {
         }
       )
       const res = await response.json()
-      const list = res.commits.map(item => item.commit.message)
+      const list = res.commits.map((item: { commit: { message: any } }) => item.commit.message)
       changeLoadingStatus('isGithubLoading', false)
       setJiraCommits(matchJiraPatternCommit(list))
       setRedmineCommits(matchRedminePatternCommit(list))
@@ -149,7 +187,7 @@ const App: React.FC = () => {
     }
   }
 
-  async function fetchRedmineIssue(id) {
+  async function fetchRedmineIssue(id:string | null | undefined) {
     const url = `${option.redminePath}/issues/${id}.json?key=${option.redmineToken}`
     try {
       const response = await fetch(url)
@@ -161,7 +199,7 @@ const App: React.FC = () => {
     }
   }
 
-  async function fetchJiraIssue(id) {
+  async function fetchJiraIssue(id:string) {
     const url = `${option.jiraPath}/rest/api/latest/issue/${id}`
     const auth = Buffer.from(`${option.jiraAccount}:${option.jiraToken}`).toString('base64')
     try {
@@ -180,7 +218,6 @@ const App: React.FC = () => {
         status: fields.status.name,
         markdown: `- ${fields.summary} [${id}](${option.jiraPath}/browse/${id})`
       }
-      // const { id, subject, status } = res.issue
       return Promise.resolve(data)
     } catch (error) {
       console.error(error)
@@ -188,12 +225,12 @@ const App: React.FC = () => {
   }
 
   const handleCopyRedmineIssues = () => {
-    const copyContent = redmineIssues.map(issue => issue.markdown).join('\r\n')
+    const copyContent = redmineIssues.map(issue => issue?.markdown).join('\r\n')
     clipboard.writeText(copyContent)
   }
 
   const handleCopyJiraIssues = () => {
-    const copyContent = jirIssues.map(issue => issue.markdown).join('\r\n')
+    const copyContent = jirIssues.map(issue => issue?.markdown).join('\r\n')
     clipboard.writeText(copyContent)
   }
 
@@ -205,23 +242,23 @@ const App: React.FC = () => {
     )
   }
 
-  const saveDataToLocalStorage = (key:String, value:Object) => {
+  const saveDataToLocalStorage = (key:string, value:Object) => {
     localStorage.setItem(key, JSON.stringify(value))
   }
 
-  const loadDataFromLocalStorage = (key: String) => {
+  const loadDataFromLocalStorage = (key: string) => {
     if (!localStorage.getItem(key)) {
       return null
     }
-    const jsonData:String = localStorage.getItem(key)
-    return JSON.parse(jsonData)
+    const jsonData:string | null = localStorage.getItem(key)
+    return JSON.parse(`${jsonData}`)
   }
 
   const JiraIssuesBlock = () => {
     return loadingStatus.isJiraLoading ? (
       <LoadingBar />
     ) : (
-      jirIssues.map((issue, index) => (<p key={index} className='truncate'>{issue.markdown}</p>))
+      jirIssues.map((issue, index) => (<p key={index} className='truncate'>{issue?.markdown}</p>))
     )
   }
 
@@ -229,7 +266,7 @@ const App: React.FC = () => {
     return loadingStatus.isRedmineLoading ? (
       <LoadingBar />
     ) : (
-      redmineIssues.map((issue, index) => (<p key={index} className='truncate'>{issue.markdown}</p>))
+      redmineIssues.map((issue, index) => (<p key={index} className='truncate'>{issue?.markdown}</p>))
     )
   }
 
@@ -240,14 +277,14 @@ const App: React.FC = () => {
         <TextField
           label="OWNER"
           variant="standard"
-          onInput={(e) => handleInput(e.target.value, 'owner')}
+          onInput={(e) => handleInput((e.target as HTMLInputElement).value, 'owner')}
           value={option.owner}
         />
         <div className="mx-2 text-gray-700" >/</div>
         <TextField
           label="REPO"
           variant="standard"
-          onInput={(e) => handleInput(e.target.value, 'repo')}
+          onInput={(e) => handleInput((e.target as HTMLInputElement).value, 'repo')}
           value={option.repo}
           fullWidth
         />
@@ -261,7 +298,7 @@ const App: React.FC = () => {
             id="demo-simple-select"
             value={branch.from}
             label="From"
-            onChange={(e:SelectChangeEvent) => handleBranchChange(e.target.value, 'from')}
+            onChange={(e:SelectChangeEvent) => handleBranchChange(e.target.value as string, 'from')}
           >
             { branchOption.map(item => (<MenuItem value={item} key={`from_${item}`}>{item}</MenuItem>)) }
 
@@ -275,7 +312,7 @@ const App: React.FC = () => {
             id="demo-simple-select"
             value={branch.into}
             label="Into"
-            onChange={(e:SelectChangeEvent) => handleBranchChange(e.target.value as String, 'into')}
+            onChange={(e:SelectChangeEvent) => handleBranchChange(e.target.value as string, 'into')}
           >
             { branchOption.map(item => (<MenuItem value={item} key={`into_${item}`}>{item}</MenuItem>)) }
 
@@ -289,7 +326,7 @@ const App: React.FC = () => {
           variant="standard"
           type="password"
           fullWidth
-          onInput={(e) => handleInput(e.target.value as String, 'githubToken')}
+          onInput={(e) => handleInput((e.target as HTMLInputElement).value as string, 'githubToken')}
           value={option.githubToken}
         />
       </Box>
@@ -300,7 +337,7 @@ const App: React.FC = () => {
           label="Redmine path"
           variant="standard"
           fullWidth
-          onInput={(e) => handleInput(e.target.value as String, 'redminePath')}
+          onInput={(e) => handleInput((e.target as HTMLInputElement).value as string, 'redminePath')}
           value={option.redminePath}
         />
       </Box>
@@ -311,7 +348,7 @@ const App: React.FC = () => {
           variant="standard"
           type="password"
           fullWidth
-          onInput={(e) => handleInput(e.target.value as String, 'redmineToken')}
+          onInput={(e) => handleInput((e.target as HTMLInputElement).value as string, 'redmineToken')}
           value={option.redmineToken}
         />
       </Box>
@@ -322,7 +359,7 @@ const App: React.FC = () => {
           label="Jira path"
           variant="standard"
           fullWidth
-          onInput={(e) => handleInput(e.target.value as String, 'jiraPath')}
+          onInput={(e) => handleInput((e.target as HTMLInputElement).value as string, 'jiraPath')}
           value={option.jiraPath}
         />
       </Box>
@@ -331,7 +368,7 @@ const App: React.FC = () => {
         <TextField
           label="Jira account"
           variant="standard"
-          onInput={(e) => handleInput(e.target.value, 'jiraAccount')}
+          onInput={(e) => handleInput((e.target as HTMLInputElement).value, 'jiraAccount')}
           value={option.jiraAccount}
           fullWidth
         />
@@ -341,7 +378,7 @@ const App: React.FC = () => {
           variant="standard"
           type="password"
           fullWidth
-          onInput={(e) => handleInput(e.target.value as String, 'jiraToken')}
+          onInput={(e) => handleInput((e.target as HTMLInputElement).value as string, 'jiraToken')}
           value={option.jiraToken}
         />
       </Box>
@@ -360,6 +397,7 @@ const App: React.FC = () => {
             />
           </Button>
         </h1>
+        {/* @ts-ignore */}
         <JiraIssuesBlock />
       </Box>
       <Divider light />
@@ -373,6 +411,7 @@ const App: React.FC = () => {
             />
           </Button>
         </h1>
+        {/* @ts-ignore */}
         <RedmineIssuesBlock />
       </Box>
     </main>

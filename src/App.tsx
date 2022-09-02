@@ -55,6 +55,13 @@ const App: React.FC = () => {
     setloadingStatus(updateLoadingStatus)
   }
 
+  // restore option on mounted
+  useEffect(() => {
+    if (loadDataFromLocalStorage('option')) {
+      setOption(loadDataFromLocalStorage('option'))
+    }
+  }, [])
+
   useEffect(() => {
     if (redmineCommits.length > 0) {
       changeLoadingStatus('isRedmineLoading', true)
@@ -120,6 +127,7 @@ const App: React.FC = () => {
   }
 
   const handleFetchBranchDiff = async () => {
+    saveDataToLocalStorage('option', option)
     try {
       changeLoadingStatus('isGithubLoading', true)
       const response = await fetch(
@@ -195,6 +203,18 @@ const App: React.FC = () => {
         <LinearProgress />
       </Box>
     )
+  }
+
+  const saveDataToLocalStorage = (key:String, value:Object) => {
+    localStorage.setItem(key, JSON.stringify(value))
+  }
+
+  const loadDataFromLocalStorage = (key: String) => {
+    if (!localStorage.getItem(key)) {
+      return null
+    }
+    const jsonData:String = localStorage.getItem(key)
+    return JSON.parse(jsonData)
   }
 
   const JiraIssuesBlock = () => {

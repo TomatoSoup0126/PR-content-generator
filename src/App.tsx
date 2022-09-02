@@ -15,6 +15,7 @@ import Select, { SelectChangeEvent } from '@mui/material/Select'
 import FormControl from '@mui/material/FormControl'
 import Button from '@mui/material/Button'
 import Divider from '@mui/material/Divider'
+import LinearProgress from '@mui/material/LinearProgress'
 import { clipboard } from 'electron'
 
 const App: React.FC = () => {
@@ -23,8 +24,10 @@ const App: React.FC = () => {
     repo: '',
     githubToken: '',
     redmineToken: '',
+    redminePath: '',
     jiraAccount: '',
-    jiraToken: ''
+    jiraToken: '',
+    jiraPath: '',
   })
 
   const [branch, setBranch] = useState({
@@ -34,16 +37,33 @@ const App: React.FC = () => {
 
   const [jiraCommits, setJiraCommits] = useState([])
   const [jirIssues, setJirIssues] = useState([])
-  const [redmineCommits, setredmineCommits] = useState([])
+  const [redmineCommits, setRedmineCommits] = useState([])
   const [redmineIssues, setRedmineIssues] = useState([])
+
+  const [loadingStatus, setloadingStatus] = useState({
+    showResultBlock: true,
+    isGithubLoading: false,
+    isRedmineLoading: false,
+    isJiraLoading: false
+  })
+
+  const changeLoadingStatus = (key:String, value:Boolean) => {
+    const updateLoadingStatus = {
+      ...loadingStatus
+    }
+    updateLoadingStatus[key] = value
+    setloadingStatus(updateLoadingStatus)
+  }
 
   useEffect(() => {
     if (redmineCommits.length > 0) {
+      changeLoadingStatus('isRedmineLoading', true)
       Promise.all(redmineCommits.map(commit => fetchRedmineIssue(getRedmineId(commit))))
         .then(data => {
           const excludeStatusList = ['Close', 'On Production']
           const sortedData = data.sort((a, b) => a.id - b.id).filter(item => !excludeStatusList.some(status => status === item.status))
           setRedmineIssues(sortedData)
+          changeLoadingStatus('isRedmineLoading', false)
         })
     } else {
       setRedmineIssues([])
@@ -52,11 +72,13 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (jiraCommits.length > 0) {
+      changeLoadingStatus('isJiraLoading', true)
       Promise.all(jiraCommits.map(commit => fetchJiraIssue(getJiraId(commit))))
         .then(data => {
           const excludeStatusList = ['CLOSED']
           const sortedData = data.sort((a, b) => a.id - b.id).filter(item => !excludeStatusList.some(status => status === item.status))
           setJirIssues(sortedData)
+          changeLoadingStatus('isJiraLoading', false)
         })
     } else {
       setJirIssues([])
@@ -99,6 +121,7 @@ const App: React.FC = () => {
 
   const handleFetchBranchDiff = async () => {
     try {
+      changeLoadingStatus('isGithubLoading', true)
       const response = await fetch(
         `https://api.github.com/repos/${option.owner}/${option.repo}/compare/${branch.into}...${branch.from}`,
         {
@@ -109,27 +132,29 @@ const App: React.FC = () => {
       )
       const res = await response.json()
       const list = res.commits.map(item => item.commit.message)
+      changeLoadingStatus('isGithubLoading', false)
       setJiraCommits(matchJiraPatternCommit(list))
-      setredmineCommits(matchRedminePatternCommit(list))
+      setRedmineCommits(matchRedminePatternCommit(list))
     } catch (error) {
       console.error(ErrorEvent)
+      changeLoadingStatus('isGithubLoading', false)
     }
   }
 
   async function fetchRedmineIssue(id) {
-    const url = `https://redmine.owlting.com/issues/${id}.json?key=${option.redmineToken}`
+    const url = `${option.redminePath}/issues/${id}.json?key=${option.redmineToken}`
     try {
       const response = await fetch(url)
       const res = await response.json()
       const { id, subject, status } = res.issue
-      return Promise.resolve({id, subject, status: status.name , markdown: `- ${subject} [redmine #${id}](https://redmine.owlting.com/issues/${id})`})
+      return Promise.resolve({id, subject, status: status.name , markdown: `- ${subject} [redmine #${id}](${option.redminePath}/issues/${id})`})
     } catch (error) {
       console.error(ErrorEvent)
     }
   }
 
   async function fetchJiraIssue(id) {
-    const url = `https://owlting.atlassian.net/rest/api/latest/issue/${id}`
+    const url = `${option.jiraPath}/rest/api/latest/issue/${id}`
     const auth = Buffer.from(`${option.jiraAccount}:${option.jiraToken}`).toString('base64')
     try {
       const response = await fetch(
@@ -145,7 +170,7 @@ const App: React.FC = () => {
         id: fields.key,
         subject: fields.summary,
         status: fields.status.name,
-        markdown: `- ${fields.summary} [${id}](https://owlting.atlassian.net/browse/${id})`
+        markdown: `- ${fields.summary} [${id}](${option.jiraPath}/browse/${id})`
       }
       // const { id, subject, status } = res.issue
       return Promise.resolve(data)
@@ -162,6 +187,30 @@ const App: React.FC = () => {
   const handleCopyJiraIssues = () => {
     const copyContent = jirIssues.map(issue => issue.markdown).join('\r\n')
     clipboard.writeText(copyContent)
+  }
+
+  const LoadingBar = () => {
+    return (
+      <Box sx={{ width: '100%' }}>
+        <LinearProgress />
+      </Box>
+    )
+  }
+
+  const JiraIssuesBlock = () => {
+    return loadingStatus.isJiraLoading ? (
+      <LoadingBar />
+    ) : (
+      jirIssues.map((issue, index) => (<p key={index} className='truncate'>{issue.markdown}</p>))
+    )
+  }
+
+  const RedmineIssuesBlock = () => {
+    return loadingStatus.isRedmineLoading ? (
+      <LoadingBar />
+    ) : (
+      redmineIssues.map((issue, index) => (<p key={index} className='truncate'>{issue.markdown}</p>))
+    )
   }
 
   return (
@@ -216,7 +265,7 @@ const App: React.FC = () => {
       <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
         <KeyIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
         <TextField
-          label="github token"
+          label="Github token"
           variant="standard"
           type="password"
           fullWidth
@@ -224,10 +273,21 @@ const App: React.FC = () => {
           value={option.githubToken}
         />
       </Box>
+      <Divider light />
+      <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
+        <h3 className="w-[24px] mr-[8px] text-white bg-slate-500 text-center rounded-md">R</h3>
+        <TextField
+          label="Redmine path"
+          variant="standard"
+          fullWidth
+          onInput={(e) => handleInput(e.target.value as String, 'redminePath')}
+          value={option.redminePath}
+        />
+      </Box>
       <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
         <KeyIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
         <TextField
-          label="redmine token"
+          label="Redmine token"
           variant="standard"
           type="password"
           fullWidth
@@ -235,10 +295,21 @@ const App: React.FC = () => {
           value={option.redmineToken}
         />
       </Box>
+      <Divider light />
+      <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
+        <h3 className="w-[24px] mr-[8px] text-white bg-slate-500 text-center rounded-md">J</h3>
+        <TextField
+          label="Jira path"
+          variant="standard"
+          fullWidth
+          onInput={(e) => handleInput(e.target.value as String, 'jiraPath')}
+          value={option.jiraPath}
+        />
+      </Box>
       <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
         <KeyIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
         <TextField
-          label="jira account"
+          label="Jira account"
           variant="standard"
           onInput={(e) => handleInput(e.target.value, 'jiraAccount')}
           value={option.jiraAccount}
@@ -246,7 +317,7 @@ const App: React.FC = () => {
         />
         <div className="mx-2 text-gray-700" >/</div>
         <TextField
-          label="jira token"
+          label="Jira token"
           variant="standard"
           type="password"
           fullWidth
@@ -255,15 +326,10 @@ const App: React.FC = () => {
         />
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
-        <Button variant="contained" onClick={handleFetchBranchDiff} >
-          <AutoFixHighIcon sx={{ color: 'white', mr: 1}} />
-          Generate Content
+        <Button variant="contained" onClick={handleFetchBranchDiff} disabled={loadingStatus.isGithubLoading}>
+          <AutoFixHighIcon sx={{ color: 'white' }} />
         </Button>
       </Box>
-      {/* <Box sx={{ m: 2 }}>
-        <h1 className='text-xl mb-2'>Jira</h1>
-        {jiraCommits.map(commit => (<p key={commit} className='truncate'>{commit}</p>))}
-      </Box> */}
       <Box sx={{ m: 2 }}>
         <h1 className='text-xl mb-2 mr-2'>
           Jira Issue
@@ -274,13 +340,9 @@ const App: React.FC = () => {
             />
           </Button>
         </h1>
-        {jirIssues.map((issue, index) => (<p key={index} className='truncate'>{issue.markdown}</p>))}
+        <JiraIssuesBlock />
       </Box>
       <Divider light />
-      {/* <Box sx={{ m: 2 }}>
-        <h1 className='text-xl mb-2'>Redmine</h1>
-        {redmineCommits.map(commit => (<p key={commit} className='truncate'>{commit}</p>))}
-      </Box> */}
       <Box sx={{ m: 2 }}>
         <h1 className='text-xl mb-2 mr-2'>
           Redmine Issue
@@ -291,7 +353,7 @@ const App: React.FC = () => {
             />
           </Button>
         </h1>
-        {redmineIssues.map((issue, index) => (<p key={index} className='truncate'>{issue.markdown}</p>))}
+        <RedmineIssuesBlock />
       </Box>
     </main>
   )

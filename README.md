@@ -6,7 +6,7 @@
 - Fetch issues on Jira and Redmine issue api
 - Export issues to markdown
 
-![screenshot.png](https://github.com/TomatoSoup0126/PR-content-generator/tree/master/public/screenshot.png)
+![screenshot.png](https://github.com/TomatoSoup0126/PR-content-generator/blob/master/public/screenshot.png?raw=true)
 ## Quick start
 
 ```sh

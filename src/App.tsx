@@ -124,7 +124,7 @@ const App: React.FC = () => {
     }
   }, [jiraCommits])
 
-  const branchOption = ['dev', 'release', 'master']
+  const branchOption = ['staging', 'dev', 'release', 'master']
 
   const jiraPattern: RegExp = /\[([a-zA-Z\s]+)-\d{4}\]/ // [OW-1234]
   const matchJiraPatternCommit = (commits:String[]) => {

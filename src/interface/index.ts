@@ -1,3 +1,5 @@
+import { ReactNode } from 'react'
+
 export interface LoadingStatus {
   showResultBlock: String
   isGithubLoading: String
@@ -37,4 +39,11 @@ export interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
   value: number;
+}
+
+export interface BranchListProps {
+  branches: String[]
+  handleDeleteBranchOption: Function
+  handleAddBranchOption: Function
+  children: ReactNode
 }

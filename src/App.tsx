@@ -32,6 +32,8 @@ import LinearProgress from '@mui/material/LinearProgress'
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 
+import BranchList from './components/BranchList'
+
 import { clipboard } from 'electron'
 
 const App: React.FC = () => {
@@ -53,8 +55,8 @@ const App: React.FC = () => {
   })
 
   const [branch, setBranch] = useState({
-    into: 'release',
-    from: 'dev'
+    into: '',
+    from: ''
   })
 
   const [applyStatus, setApplyStatus] = useState({
@@ -66,6 +68,7 @@ const App: React.FC = () => {
   const [jirIssues, setJirIssues] = useState<Commit[] | undefined[]>([])
   const [redmineCommits, setRedmineCommits] = useState<String[] | undefined[]>([])
   const [redmineIssues, setRedmineIssues] = useState<Commit[] | undefined[]>([])
+  const [branches, setBranches] = useState<String[]>(['dev', 'release', 'master'])
 
   const [loadingStatus, setLoadingStatus] = useState({
     showResultBlock: true,
@@ -97,6 +100,9 @@ const App: React.FC = () => {
     }
     if (loadDataFromLocalStorage('applyStatus')) {
       setApplyStatus(loadDataFromLocalStorage('applyStatus'))
+    }
+    if (loadDataFromLocalStorage('branches')) {
+      setBranches(loadDataFromLocalStorage('branches'))
     }
   }, [])
 
@@ -131,8 +137,6 @@ const App: React.FC = () => {
       setJirIssues([])
     }
   }, [jiraCommits])
-
-  const branchOption = ['staging', 'dev', 'release', 'master']
 
   const jiraPattern: RegExp = /\[([a-zA-Z\s]+)-\d{4}\]/ // [OW-1234]
   const matchJiraPatternCommit = (commits:String[]) => {
@@ -243,6 +247,18 @@ const App: React.FC = () => {
     clipboard.writeText(copyContent)
   }
 
+  const handleDeleteBranchOption = (deleteItem:string) => {
+    const updatedBranches = branches.filter(item => item !== deleteItem)
+    setBranches(updatedBranches)
+    saveDataToLocalStorage('branches', updatedBranches)
+  }
+
+  const handleAddBranchOption = (addItem:string) => {
+    const updatedBranches = [...branches, addItem]
+    setBranches(updatedBranches)
+    saveDataToLocalStorage('branches', updatedBranches)
+  }
+
   const LoadingBar = () => {
     return (
       <Box sx={{ width: '100%' }}>
@@ -335,8 +351,8 @@ const App: React.FC = () => {
                 label="From"
                 onChange={(e:SelectChangeEvent) => handleBranchChange(e.target.value as string, 'from')}
               >
-                { branchOption.map(item => (<MenuItem value={item} key={`from_${item}`}>{item}</MenuItem>)) }
-
+                {/* @ts-ignore */}
+                { branches.map(item => (<MenuItem value={item} key={`from_${item}`}>{item}</MenuItem>)) }
               </Select>
             </FormControl>
             <ArrowRightAltIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
@@ -349,8 +365,8 @@ const App: React.FC = () => {
                 label="Into"
                 onChange={(e:SelectChangeEvent) => handleBranchChange(e.target.value as string, 'into')}
               >
-                { branchOption.map(item => (<MenuItem value={item} key={`into_${item}`}>{item}</MenuItem>)) }
-
+                {/* @ts-ignore */}
+                { branches.map(item => (<MenuItem value={item} key={`into_${item}`}>{item}</MenuItem>)) }
               </Select>
             </FormControl>
           </Box>
@@ -390,7 +406,6 @@ const App: React.FC = () => {
         </>
       </TabPanel>
 
-
       <TabPanel value={activeTab} index={1}>
         <>
           <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
@@ -404,6 +419,16 @@ const App: React.FC = () => {
               value={option.githubToken}
             />
           </Box>
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', m: 2 }}>
+            <ForkRightIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
+            <BranchList
+              branches={branches}
+              handleDeleteBranchOption={handleDeleteBranchOption}
+              handleAddBranchOption={handleAddBranchOption}
+            >
+            </BranchList>
+          </Box>
+
           <Divider light />
           <Box sx={{ display: 'flex', alignItems: 'center', m: 2 }}>
             <h3 className="w-[24px] mr-[8px] text-white bg-slate-500 text-center rounded-md">R</h3>

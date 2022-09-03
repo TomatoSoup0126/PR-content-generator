@@ -1,4 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, SyntheticEvent } from 'react'
+import {
+  LoadingStatus,
+  Option,
+  Branch,
+  Commit,
+  TabPanelProps
+} from './interface'
 
 import Box from '@mui/material/Box'
 import GitHubIcon from '@mui/icons-material/GitHub'
@@ -7,6 +14,7 @@ import ForkRightIcon from '@mui/icons-material/ForkRight'
 import KeyIcon from '@mui/icons-material/Key'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh'
+import SettingsIcon from '@mui/icons-material/Settings';
 
 import TextField from '@mui/material/TextField'
 import InputLabel from '@mui/material/InputLabel'
@@ -16,39 +24,18 @@ import FormControl from '@mui/material/FormControl'
 import Button from '@mui/material/Button'
 import Divider from '@mui/material/Divider'
 import LinearProgress from '@mui/material/LinearProgress'
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+
 import { clipboard } from 'electron'
 
-interface LoadingStatus {
-  showResultBlock: String
-  isGithubLoading: String
-  isRedmineLoading: String
-  isJiraLoading: String
-}
-
-interface Option {
-  owner: String
-  repo: String
-  githubToken: String
-  redmineToken: String
-  redminePath: String
-  jiraAccount: String
-  jiraToken: String
-  jiraPath: String
-}
-
-interface Branch {
-  into: String
-  from: String
-}
-
-interface Commit {
-  id: any
-  subject: any
-  status: any
-  markdown: String
-}
-
 const App: React.FC = () => {
+  const [activeTab, setActiveTab] = useState(0)
+
+  const handleTabChange = (event:SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
+  }
+
   const [option, setOption] = useState({
     owner: '',
     repo: '',
@@ -70,7 +57,7 @@ const App: React.FC = () => {
   const [redmineCommits, setRedmineCommits] = useState<String[] | undefined[]>([])
   const [redmineIssues, setRedmineIssues] = useState<Commit[] | undefined[]>([])
 
-  const [loadingStatus, setloadingStatus] = useState({
+  const [loadingStatus, setLoadingStatus] = useState({
     showResultBlock: true,
     isGithubLoading: false,
     isRedmineLoading: false,
@@ -82,7 +69,7 @@ const App: React.FC = () => {
       ...loadingStatus
     }
     updateLoadingStatus[key] = value
-    setloadingStatus(updateLoadingStatus)
+    setLoadingStatus(updateLoadingStatus)
   }
 
   // restore option on mounted
@@ -242,6 +229,26 @@ const App: React.FC = () => {
     )
   }
 
+  function TabPanel(props: TabPanelProps) {
+    const { children, value, index, ...other } = props;
+
+    return (
+      <div
+        role="tabpanel"
+        hidden={value !== index}
+        id={`tabpanel-${index}`}
+        aria-labelledby={`tab-${index}`}
+        {...other}
+      >
+        {value === index && (
+          <Box>
+            {children}
+          </Box>
+        )}
+      </div>
+    )
+  }
+
   const saveDataToLocalStorage = (key:string, value:Object) => {
     localStorage.setItem(key, JSON.stringify(value))
   }
@@ -272,148 +279,163 @@ const App: React.FC = () => {
 
   return (
     <main className="container mx-auto p-2">
-      <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
-        <GitHubIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
-        <TextField
-          label="OWNER"
-          variant="standard"
-          onInput={(e) => handleInput((e.target as HTMLInputElement).value, 'owner')}
-          value={option.owner}
-        />
-        <div className="mx-2 text-gray-700" >/</div>
-        <TextField
-          label="REPO"
-          variant="standard"
-          onInput={(e) => handleInput((e.target as HTMLInputElement).value, 'repo')}
-          value={option.repo}
-          fullWidth
-        />
-      </Box>
-      <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
-        <ForkRightIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
-        <FormControl variant="standard" fullWidth>
-          <InputLabel id="demo-simple-select-label">From</InputLabel>
-          <Select
-            labelId="demo-simple-select-label"
-            id="demo-simple-select"
-            value={branch.from}
-            label="From"
-            onChange={(e:SelectChangeEvent) => handleBranchChange(e.target.value as string, 'from')}
-          >
-            { branchOption.map(item => (<MenuItem value={item} key={`from_${item}`}>{item}</MenuItem>)) }
-
-          </Select>
-        </FormControl>
-        <ArrowRightAltIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
-        <FormControl variant="standard" fullWidth>
-          <InputLabel id="demo-simple-select-label">Into</InputLabel>
-          <Select
-            labelId="demo-simple-select-label"
-            id="demo-simple-select"
-            value={branch.into}
-            label="Into"
-            onChange={(e:SelectChangeEvent) => handleBranchChange(e.target.value as string, 'into')}
-          >
-            { branchOption.map(item => (<MenuItem value={item} key={`into_${item}`}>{item}</MenuItem>)) }
-
-          </Select>
-        </FormControl>
-      </Box>
-      <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
-        <KeyIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
-        <TextField
-          label="Github token"
-          variant="standard"
-          type="password"
-          fullWidth
-          onInput={(e) => handleInput((e.target as HTMLInputElement).value as string, 'githubToken')}
-          value={option.githubToken}
-        />
-      </Box>
-      <Divider light />
-      <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
-        <h3 className="w-[24px] mr-[8px] text-white bg-slate-500 text-center rounded-md">R</h3>
-        <TextField
-          label="Redmine path"
-          variant="standard"
-          fullWidth
-          onInput={(e) => handleInput((e.target as HTMLInputElement).value as string, 'redminePath')}
-          value={option.redminePath}
-        />
-      </Box>
-      <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
-        <KeyIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
-        <TextField
-          label="Redmine token"
-          variant="standard"
-          type="password"
-          fullWidth
-          onInput={(e) => handleInput((e.target as HTMLInputElement).value as string, 'redmineToken')}
-          value={option.redmineToken}
-        />
-      </Box>
-      <Divider light />
-      <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
-        <h3 className="w-[24px] mr-[8px] text-white bg-slate-500 text-center rounded-md">J</h3>
-        <TextField
-          label="Jira path"
-          variant="standard"
-          fullWidth
-          onInput={(e) => handleInput((e.target as HTMLInputElement).value as string, 'jiraPath')}
-          value={option.jiraPath}
-        />
-      </Box>
-      <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
-        <KeyIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
-        <TextField
-          label="Jira account"
-          variant="standard"
-          onInput={(e) => handleInput((e.target as HTMLInputElement).value, 'jiraAccount')}
-          value={option.jiraAccount}
-          fullWidth
-        />
-        <div className="mx-2 text-gray-700" >/</div>
-        <TextField
-          label="Jira token"
-          variant="standard"
-          type="password"
-          fullWidth
-          onInput={(e) => handleInput((e.target as HTMLInputElement).value as string, 'jiraToken')}
-          value={option.jiraToken}
-        />
-      </Box>
-      <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
-        <Button variant="contained" onClick={handleFetchBranchDiff} disabled={loadingStatus.isGithubLoading}>
-          <AutoFixHighIcon sx={{ color: 'white' }} />
-        </Button>
-      </Box>
-      <Box sx={{ m: 2 }}>
-        <h1 className='text-xl mb-2 mr-2'>
-          Jira Issue
-          <Button variant="text">
-            <ContentCopyIcon
-              sx={{ color: 'action.active', mr: 1, my: 0.5 }}
-              onClick={handleCopyJiraIssues}
+      <Tabs value={activeTab} onChange={handleTabChange} aria-label="icon tabs">
+        <Tab icon={<AutoFixHighIcon />} aria-label="phone" />
+        <Tab icon={<SettingsIcon />} aria-label="favorite" />
+      </Tabs>
+      <TabPanel value={activeTab} index={0}>
+        <>
+          <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
+            <GitHubIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
+            <TextField
+              label="OWNER"
+              variant="standard"
+              onInput={(e) => handleInput((e.target as HTMLInputElement).value, 'owner')}
+              value={option.owner}
             />
-          </Button>
-        </h1>
-        {/* @ts-ignore */}
-        <JiraIssuesBlock />
-      </Box>
-      <Divider light />
-      <Box sx={{ m: 2 }}>
-        <h1 className='text-xl mb-2 mr-2'>
-          Redmine Issue
-          <Button variant="text">
-            <ContentCopyIcon
-              sx={{ color: 'action.active', mr: 1, my: 0.5 }}
-              onClick={handleCopyRedmineIssues}
+            <div className="mx-2 text-gray-700" >/</div>
+            <TextField
+              label="REPO"
+              variant="standard"
+              onInput={(e) => handleInput((e.target as HTMLInputElement).value, 'repo')}
+              value={option.repo}
+              fullWidth
             />
-          </Button>
-        </h1>
-        {/* @ts-ignore */}
-        <RedmineIssuesBlock />
-      </Box>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
+            <ForkRightIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
+            <FormControl variant="standard" fullWidth>
+              <InputLabel id="demo-simple-select-label">From</InputLabel>
+              <Select
+                labelId="demo-simple-select-label"
+                id="demo-simple-select"
+                value={branch.from}
+                label="From"
+                onChange={(e:SelectChangeEvent) => handleBranchChange(e.target.value as string, 'from')}
+              >
+                { branchOption.map(item => (<MenuItem value={item} key={`from_${item}`}>{item}</MenuItem>)) }
+
+              </Select>
+            </FormControl>
+            <ArrowRightAltIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
+            <FormControl variant="standard" fullWidth>
+              <InputLabel id="demo-simple-select-label">Into</InputLabel>
+              <Select
+                labelId="demo-simple-select-label"
+                id="demo-simple-select"
+                value={branch.into}
+                label="Into"
+                onChange={(e:SelectChangeEvent) => handleBranchChange(e.target.value as string, 'into')}
+              >
+                { branchOption.map(item => (<MenuItem value={item} key={`into_${item}`}>{item}</MenuItem>)) }
+
+              </Select>
+            </FormControl>
+          </Box>
+          <Divider light />
+          <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
+            <Button variant="contained" onClick={handleFetchBranchDiff} disabled={loadingStatus.isGithubLoading}>
+              <AutoFixHighIcon sx={{ color: 'white' }} />
+            </Button>
+          </Box>
+          <Box sx={{ m: 2 }}>
+            <h1 className='text-xl mb-2 mr-2'>
+              Jira Issue
+              <Button variant="text">
+                <ContentCopyIcon
+                  sx={{ color: 'action.active', mr: 1, my: 0.5 }}
+                  onClick={handleCopyJiraIssues}
+                />
+              </Button>
+            </h1>
+            {/* @ts-ignore */}
+            <JiraIssuesBlock />
+          </Box>
+          <Divider light />
+          <Box sx={{ m: 2 }}>
+            <h1 className='text-xl mb-2 mr-2'>
+              Redmine Issue
+              <Button variant="text">
+                <ContentCopyIcon
+                  sx={{ color: 'action.active', mr: 1, my: 0.5 }}
+                  onClick={handleCopyRedmineIssues}
+                />
+              </Button>
+            </h1>
+            {/* @ts-ignore */}
+            <RedmineIssuesBlock />
+          </Box>
+        </>
+      </TabPanel>
+
+
+      <TabPanel value={activeTab} index={1}>
+        <>
+          <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
+            <KeyIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
+            <TextField
+              label="Github token"
+              variant="standard"
+              type="password"
+              fullWidth
+              onInput={(e) => handleInput((e.target as HTMLInputElement).value as string, 'githubToken')}
+              value={option.githubToken}
+            />
+          </Box>
+          <Divider light />
+          <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
+            <h3 className="w-[24px] mr-[8px] text-white bg-slate-500 text-center rounded-md">R</h3>
+            <TextField
+              label="Redmine path"
+              variant="standard"
+              fullWidth
+              onInput={(e) => handleInput((e.target as HTMLInputElement).value as string, 'redminePath')}
+              value={option.redminePath}
+            />
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
+            <KeyIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
+            <TextField
+              label="Redmine token"
+              variant="standard"
+              type="password"
+              fullWidth
+              onInput={(e) => handleInput((e.target as HTMLInputElement).value as string, 'redmineToken')}
+              value={option.redmineToken}
+            />
+          </Box>
+          <Divider light />
+          <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
+            <h3 className="w-[24px] mr-[8px] text-white bg-slate-500 text-center rounded-md">J</h3>
+            <TextField
+              label="Jira path"
+              variant="standard"
+              fullWidth
+              onInput={(e) => handleInput((e.target as HTMLInputElement).value as string, 'jiraPath')}
+              value={option.jiraPath}
+            />
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
+            <KeyIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
+            <TextField
+              label="Jira account"
+              variant="standard"
+              onInput={(e) => handleInput((e.target as HTMLInputElement).value, 'jiraAccount')}
+              value={option.jiraAccount}
+              fullWidth
+            />
+            <div className="mx-2 text-gray-700" >/</div>
+            <TextField
+              label="Jira token"
+              variant="standard"
+              type="password"
+              fullWidth
+              onInput={(e) => handleInput((e.target as HTMLInputElement).value as string, 'jiraToken')}
+              value={option.jiraToken}
+            />
+          </Box>
+        </>
+      </TabPanel>
     </main>
   )
 }

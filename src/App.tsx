@@ -33,6 +33,7 @@ import Tab from '@mui/material/Tab'
 
 import BranchList from './components/BranchList'
 import IssueBlock from './components/IssueBlock'
+import ErrorList from './components/ErrorList'
 
 import { clipboard } from 'electron'
 
@@ -65,6 +66,7 @@ const App: React.FC = () => {
   const [redmineCommits, setRedmineCommits] = useState<String[] | undefined[]>([])
   const [redmineIssues, setRedmineIssues] = useState<Commit[] | undefined[]>([])
   const [branches, setBranches] = useState<String[]>(['dev', 'release', 'master'])
+  const [errors, setErrors] = useState<String[] | undefined[]>([])
 
   const [isGithubLoading, setIsGithubLoading] = useState(false)
   const [isRedmineLoading, setIsRedmineLoading] = useState(false)
@@ -156,6 +158,9 @@ const App: React.FC = () => {
   const handleFetchBranchDiff = async () => {
     saveDataToLocalStorage('option', option)
     saveDataToLocalStorage('applyStatus', applyStatus)
+    setJiraCommits([])
+    setRedmineCommits([])
+    setErrors([])
     try {
       setIsGithubLoading(true)
       const response = await fetch(
@@ -173,7 +178,8 @@ const App: React.FC = () => {
       setRedmineCommits(matchRedminePatternCommit(list))
       setIsGithubLoading(false)
     } catch (error) {
-      console.error(ErrorEvent)
+      console.error(error)
+      setErrors(['Branch not found'])
       setIsGithubLoading(false)
     }
   }
@@ -186,7 +192,10 @@ const App: React.FC = () => {
       const { id, subject, status } = res.issue
       return Promise.resolve({id, subject, status: status.name , markdown: `- ${subject} [redmine #${id}](${option.redminePath}/issues/${id})`})
     } catch (error) {
-      console.error(ErrorEvent)
+      console.error(error)
+      // @ts-ignore
+      const updateErrors:String[] = [...errors, 'Redmine fetch error']
+      setErrors(updateErrors)
     }
   }
 
@@ -212,6 +221,9 @@ const App: React.FC = () => {
       return Promise.resolve(data)
     } catch (error) {
       console.error(error)
+      // @ts-ignore
+      const updateErrors:String[] = [...errors, 'Jira fetch error']
+      setErrors(updateErrors)
     }
   }
 
@@ -370,6 +382,7 @@ const App: React.FC = () => {
               )
             }
           </Box>
+          <ErrorList errors={errors} children={null} />
           {
             !isJiraLoading && jirIssues.length > 0 &&
             (

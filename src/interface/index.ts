@@ -47,3 +47,8 @@ export interface IssueBlockProps {
   handleCopyEvent: Function
   children: ReactNode
 }
+
+export interface ErrorListProps {
+  errors: (String[] | undefined[])
+  children: ReactNode
+}

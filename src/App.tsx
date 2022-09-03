@@ -1,6 +1,5 @@
-import { useState, useEffect, SyntheticEvent } from 'react'
+import { useState, useEffect, useMemo, SyntheticEvent } from 'react'
 import {
-  LoadingStatus,
   ApplyStatus,
   Option,
   Branch,
@@ -8,31 +7,32 @@ import {
   TabPanelProps
 } from './interface'
 
+import { grey, red, blue } from '@mui/material/colors';
 import Box from '@mui/material/Box'
 import GitHubIcon from '@mui/icons-material/GitHub'
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt'
 import ForkRightIcon from '@mui/icons-material/ForkRight'
 import KeyIcon from '@mui/icons-material/Key'
-import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh'
-import SettingsIcon from '@mui/icons-material/Settings';
-import DnsIcon from '@mui/icons-material/Dns';
+import SettingsIcon from '@mui/icons-material/Settings'
+import DnsIcon from '@mui/icons-material/Dns'
 
 import TextField from '@mui/material/TextField'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import Select, { SelectChangeEvent } from '@mui/material/Select'
-import FormGroup from '@mui/material/FormGroup';
+import FormGroup from '@mui/material/FormGroup'
 import FormControl from '@mui/material/FormControl'
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Switch from '@mui/material/Switch';
+import FormControlLabel from '@mui/material/FormControlLabel'
+import Switch from '@mui/material/Switch'
 import Button from '@mui/material/Button'
 import Divider from '@mui/material/Divider'
-import LinearProgress from '@mui/material/LinearProgress'
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
+import CircularProgress from '@mui/material/CircularProgress'
+import Tabs from '@mui/material/Tabs'
+import Tab from '@mui/material/Tab'
 
 import BranchList from './components/BranchList'
+import IssueBlock from './components/IssueBlock'
 
 import { clipboard } from 'electron'
 
@@ -66,12 +66,9 @@ const App: React.FC = () => {
   const [redmineIssues, setRedmineIssues] = useState<Commit[] | undefined[]>([])
   const [branches, setBranches] = useState<String[]>(['dev', 'release', 'master'])
 
-  const [loadingStatus, setLoadingStatus] = useState({
-    showResultBlock: true,
-    isGithubLoading: false,
-    isRedmineLoading: false,
-    isJiraLoading: false
-  })
+  const [isGithubLoading, setIsGithubLoading] = useState(false)
+  const [isRedmineLoading, setIsRedmineLoading] = useState(false)
+  const [isJiraLoading, setIsJiraLoading] = useState(false)
 
   // restore option on mounted
   useEffect(() => {
@@ -88,14 +85,14 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (redmineCommits.length > 0 && applyStatus.isFetchRedmine) {
-      changeLoadingStatus('isRedmineLoading', true)
+      setIsRedmineLoading(true)
       Promise.all(redmineCommits.map(commit => fetchRedmineIssue(getRedmineId(`${commit}`))))
         .then(data => {
           const excludeStatusList = ['Close', 'On Production']
           const sortedData = data.sort((a, b) => a?.id - b?.id).filter(item => !excludeStatusList.some(status => status === item?.status))
           // @ts-ignore
           setRedmineIssues(sortedData)
-          changeLoadingStatus('isRedmineLoading', false)
+          setIsRedmineLoading(false)
         })
     } else {
       setRedmineIssues([])
@@ -104,14 +101,14 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (jiraCommits.length > 0 && applyStatus.isFetchJira) {
-      changeLoadingStatus('isJiraLoading', true)
+      setIsJiraLoading(true)
       Promise.all(jiraCommits.map(commit => fetchJiraIssue(getJiraId(`${commit}`))))
         .then(data => {
           const excludeStatusList = ['CLOSED']
           const sortedData = data.sort((a, b) => a?.id - b?.id).filter(item => !excludeStatusList.some(status => status === item?.status))
           // @ts-ignore
           setJirIssues(sortedData)
-          changeLoadingStatus('isJiraLoading', false)
+          setIsJiraLoading(false)
         })
     } else {
       setJirIssues([])
@@ -160,7 +157,7 @@ const App: React.FC = () => {
     saveDataToLocalStorage('option', option)
     saveDataToLocalStorage('applyStatus', applyStatus)
     try {
-      changeLoadingStatus('isGithubLoading', true)
+      setIsGithubLoading(true)
       const response = await fetch(
         `https://api.github.com/repos/${option.owner}/${option.repo}/compare/${branch.into}...${branch.from}`,
         {
@@ -171,12 +168,13 @@ const App: React.FC = () => {
       )
       const res = await response.json()
       const list = res.commits.map((item: { commit: { message: any } }) => item.commit.message)
-      changeLoadingStatus('isGithubLoading', false)
+
       setJiraCommits(matchJiraPatternCommit(list))
       setRedmineCommits(matchRedminePatternCommit(list))
+      setIsGithubLoading(false)
     } catch (error) {
       console.error(ErrorEvent)
-      changeLoadingStatus('isGithubLoading', false)
+      setIsGithubLoading(false)
     }
   }
 
@@ -239,14 +237,6 @@ const App: React.FC = () => {
     saveDataToLocalStorage('branches', updatedBranches)
   }
 
-    const changeLoadingStatus = (key: keyof LoadingStatus, value:boolean) => {
-    const updateLoadingStatus = {
-      ...loadingStatus
-    }
-    updateLoadingStatus[key] = value
-    setLoadingStatus(updateLoadingStatus)
-  }
-
   const handleApplyChange = (key: keyof ApplyStatus, value:boolean) => {
     const updateApplyStatus = {
       ...applyStatus
@@ -288,30 +278,6 @@ const App: React.FC = () => {
           </Box>
         )}
       </div>
-    )
-  }
-
-  const LoadingBar = () => {
-    return (
-      <Box sx={{ width: '100%' }}>
-        <LinearProgress />
-      </Box>
-    )
-  }
-
-  const JiraIssuesBlock = () => {
-    return loadingStatus.isJiraLoading ? (
-      <LoadingBar />
-    ) : (
-      jirIssues.map((issue, index) => (<p key={index} className='truncate'>{issue?.markdown}</p>))
-    )
-  }
-
-  const RedmineIssuesBlock = () => {
-    return loadingStatus.isRedmineLoading ? (
-      <LoadingBar />
-    ) : (
-      redmineIssues.map((issue, index) => (<p key={index} className='truncate'>{issue?.markdown}</p>))
     )
   }
 
@@ -371,38 +337,43 @@ const App: React.FC = () => {
             </FormControl>
           </Box>
           <Divider light />
-          <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
-            <Button variant="contained" onClick={handleFetchBranchDiff} disabled={loadingStatus.isGithubLoading}>
+          <Box sx={{ display: 'flex', alignItems: 'center', m: 2 }}>
+            <Button
+              variant="contained"
+              onClick={handleFetchBranchDiff}
+              disabled={isGithubLoading}
+            >
               <AutoFixHighIcon sx={{ color: 'white' }} />
             </Button>
+            {
+              isGithubLoading && (<Box sx={{ display: 'flex' }}>
+                <CircularProgress sx={{ ml:2, color:grey[900] }} size={30} />
+              </Box>)
+            }
+            {
+              isRedmineLoading && (<Box sx={{ display: 'flex' }}>
+                <CircularProgress sx={{ ml:2, color:red[900] }} size={30} />
+              </Box>)
+            }
+            {
+              isJiraLoading && (<Box sx={{ display: 'flex' }}>
+                <CircularProgress sx={{ ml:2, color:blue[900] }} size={30} />
+              </Box>)
+            }
           </Box>
-          <Box sx={{ m: 2 }}>
-            <h1 className='text-xl mb-2 mr-2'>
-              Jira Issue
-              <Button variant="text">
-                <ContentCopyIcon
-                  sx={{ color: 'action.active', mr: 1, my: 0.5 }}
-                  onClick={handleCopyJiraIssues}
-                />
-              </Button>
-            </h1>
-            {/* @ts-ignore */}
-            <JiraIssuesBlock />
-          </Box>
-          <Divider light />
-          <Box sx={{ m: 2 }}>
-            <h1 className='text-xl mb-2 mr-2'>
-              Redmine Issue
-              <Button variant="text">
-                <ContentCopyIcon
-                  sx={{ color: 'action.active', mr: 1, my: 0.5 }}
-                  onClick={handleCopyRedmineIssues}
-                />
-              </Button>
-            </h1>
-            {/* @ts-ignore */}
-            <RedmineIssuesBlock />
-          </Box>
+
+          <IssueBlock
+            title="Jira Issue"
+            issues={jirIssues}
+            handleCopyEvent={handleCopyJiraIssues}
+          >
+          </IssueBlock>
+          <IssueBlock
+            title="Redmine Issue"
+            issues={redmineIssues}
+            handleCopyEvent={handleCopyRedmineIssues}
+          >
+          </IssueBlock>
         </>
       </TabPanel>
 

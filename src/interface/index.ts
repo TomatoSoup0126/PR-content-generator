@@ -1,12 +1,5 @@
 import { ReactNode } from 'react'
 
-export interface LoadingStatus {
-  showResultBlock: String
-  isGithubLoading: String
-  isRedmineLoading: String
-  isJiraLoading: String
-}
-
 export interface ApplyStatus {
   isFetchRedmine: Boolean
   isFetchJira: Boolean
@@ -45,5 +38,12 @@ export interface BranchListProps {
   branches: String[]
   handleDeleteBranchOption: Function
   handleAddBranchOption: Function
+  children: ReactNode
+}
+
+export interface IssueBlockProps {
+  title: String
+  issues: (Commit[] | undefined[])
+  handleCopyEvent: Function
   children: ReactNode
 }

@@ -37,8 +37,12 @@ const BranchList: React.FC<BranchListProps> = (props) => {
           onInput={(e) => setNewBranch((e.target as HTMLInputElement).value)}
           onKeyDown={handleEnter}
         />
-        <IconButton edge="end" aria-label="delete">
-          <AddCircleIcon  onClick={handleUpdateOption} />
+        <IconButton
+          edge="end"
+          aria-label="delete"
+          onClick={handleUpdateOption}
+        >
+          <AddCircleIcon />
         </IconButton>
       </Box>
 
@@ -49,8 +53,12 @@ const BranchList: React.FC<BranchListProps> = (props) => {
               disableGutters
               key={`option_${branch}`}
               secondaryAction={
-                <IconButton edge="end" aria-label="delete">
-                  <DeleteIcon onClick={() => handleDeleteBranchOption(branch)} />
+                <IconButton
+                  edge="end"
+                  aria-label="delete"
+                  onClick={() => handleDeleteBranchOption(branch)}
+                >
+                  <DeleteIcon />
                 </IconButton>
               }
             >

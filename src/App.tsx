@@ -346,34 +346,55 @@ const App: React.FC = () => {
               <AutoFixHighIcon sx={{ color: 'white' }} />
             </Button>
             {
-              isGithubLoading && (<Box sx={{ display: 'flex' }}>
-                <CircularProgress sx={{ ml:2, color:grey[900] }} size={30} />
-              </Box>)
+              isGithubLoading &&
+              (
+                <Box sx={{ display: 'flex' }}>
+                  <CircularProgress sx={{ ml:2, color:grey[900] }} size={30} />
+                </Box>
+              )
             }
             {
-              isRedmineLoading && (<Box sx={{ display: 'flex' }}>
-                <CircularProgress sx={{ ml:2, color:red[900] }} size={30} />
-              </Box>)
+              isRedmineLoading &&
+              (
+                <Box sx={{ display: 'flex' }}>
+                  <CircularProgress sx={{ ml:2, color:red[900] }} size={30} />
+                </Box>
+              )
             }
             {
-              isJiraLoading && (<Box sx={{ display: 'flex' }}>
-                <CircularProgress sx={{ ml:2, color:blue[900] }} size={30} />
-              </Box>)
+              isJiraLoading &&
+              (
+                <Box sx={{ display: 'flex' }}>
+                  <CircularProgress sx={{ ml:2, color:blue[900] }} size={30} />
+                </Box>
+              )
             }
           </Box>
+          {
+            !isJiraLoading && jirIssues.length > 0 &&
+            (
+              <IssueBlock
+                title="Jira Issue"
+                issues={jirIssues}
+                handleCopyEvent={handleCopyJiraIssues}
+              >
+              </IssueBlock>
+            )
+          }
 
-          <IssueBlock
-            title="Jira Issue"
-            issues={jirIssues}
-            handleCopyEvent={handleCopyJiraIssues}
-          >
-          </IssueBlock>
-          <IssueBlock
-            title="Redmine Issue"
-            issues={redmineIssues}
-            handleCopyEvent={handleCopyRedmineIssues}
-          >
-          </IssueBlock>
+          {
+            !isRedmineLoading && jirIssues.length > 0 &&
+            (
+              <IssueBlock
+                title="Redmine Issue"
+                issues={redmineIssues}
+                handleCopyEvent={handleCopyRedmineIssues}
+              >
+              </IssueBlock>
+            )
+          }
+
+
         </>
       </TabPanel>
 

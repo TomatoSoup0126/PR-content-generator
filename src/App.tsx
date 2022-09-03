@@ -39,10 +39,6 @@ import { clipboard } from 'electron'
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState(0)
 
-  const handleTabChange = (event:SyntheticEvent, newValue: number) => {
-    setActiveTab(newValue);
-  }
-
   const [option, setOption] = useState({
     owner: '',
     repo: '',
@@ -76,22 +72,6 @@ const App: React.FC = () => {
     isRedmineLoading: false,
     isJiraLoading: false
   })
-
-  const changeLoadingStatus = (key: keyof LoadingStatus, value:boolean) => {
-    const updateLoadingStatus = {
-      ...loadingStatus
-    }
-    updateLoadingStatus[key] = value
-    setLoadingStatus(updateLoadingStatus)
-  }
-
-  const handleApplyChange = (key: keyof ApplyStatus, value:boolean) => {
-    const updateApplyStatus = {
-      ...applyStatus
-    }
-    updateApplyStatus[key] = value
-    setApplyStatus(updateApplyStatus)
-  }
 
   // restore option on mounted
   useEffect(() => {
@@ -259,12 +239,36 @@ const App: React.FC = () => {
     saveDataToLocalStorage('branches', updatedBranches)
   }
 
-  const LoadingBar = () => {
-    return (
-      <Box sx={{ width: '100%' }}>
-        <LinearProgress />
-      </Box>
-    )
+    const changeLoadingStatus = (key: keyof LoadingStatus, value:boolean) => {
+    const updateLoadingStatus = {
+      ...loadingStatus
+    }
+    updateLoadingStatus[key] = value
+    setLoadingStatus(updateLoadingStatus)
+  }
+
+  const handleApplyChange = (key: keyof ApplyStatus, value:boolean) => {
+    const updateApplyStatus = {
+      ...applyStatus
+    }
+    updateApplyStatus[key] = value
+    setApplyStatus(updateApplyStatus)
+  }
+
+  const handleTabChange = (event:SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
+  }
+
+  const saveDataToLocalStorage = (key:string, value:Object) => {
+    localStorage.setItem(key, JSON.stringify(value))
+  }
+
+  const loadDataFromLocalStorage = (key: string) => {
+    if (!localStorage.getItem(key)) {
+      return null
+    }
+    const jsonData:string | null = localStorage.getItem(key)
+    return JSON.parse(`${jsonData}`)
   }
 
   function TabPanel(props: TabPanelProps) {
@@ -287,16 +291,12 @@ const App: React.FC = () => {
     )
   }
 
-  const saveDataToLocalStorage = (key:string, value:Object) => {
-    localStorage.setItem(key, JSON.stringify(value))
-  }
-
-  const loadDataFromLocalStorage = (key: string) => {
-    if (!localStorage.getItem(key)) {
-      return null
-    }
-    const jsonData:string | null = localStorage.getItem(key)
-    return JSON.parse(`${jsonData}`)
+  const LoadingBar = () => {
+    return (
+      <Box sx={{ width: '100%' }}>
+        <LinearProgress />
+      </Box>
+    )
   }
 
   const JiraIssuesBlock = () => {

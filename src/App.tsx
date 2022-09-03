@@ -1,6 +1,7 @@
 import { useState, useEffect, SyntheticEvent } from 'react'
 import {
   LoadingStatus,
+  ApplyStatus,
   Option,
   Branch,
   Commit,
@@ -15,12 +16,16 @@ import KeyIcon from '@mui/icons-material/Key'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh'
 import SettingsIcon from '@mui/icons-material/Settings';
+import DnsIcon from '@mui/icons-material/Dns';
 
 import TextField from '@mui/material/TextField'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import Select, { SelectChangeEvent } from '@mui/material/Select'
+import FormGroup from '@mui/material/FormGroup';
 import FormControl from '@mui/material/FormControl'
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Switch from '@mui/material/Switch';
 import Button from '@mui/material/Button'
 import Divider from '@mui/material/Divider'
 import LinearProgress from '@mui/material/LinearProgress'
@@ -52,6 +57,11 @@ const App: React.FC = () => {
     from: 'dev'
   })
 
+  const [applyStatus, setApplyStatus] = useState({
+    isFetchRedmine: true,
+    isFetchJira: true
+  })
+
   const [jiraCommits, setJiraCommits] = useState<String[] | undefined[]>([])
   const [jirIssues, setJirIssues] = useState<Commit[] | undefined[]>([])
   const [redmineCommits, setRedmineCommits] = useState<String[] | undefined[]>([])
@@ -72,15 +82,26 @@ const App: React.FC = () => {
     setLoadingStatus(updateLoadingStatus)
   }
 
+  const handleApplyChange = (key: keyof ApplyStatus, value:boolean) => {
+    const updateApplyStatus = {
+      ...applyStatus
+    }
+    updateApplyStatus[key] = value
+    setApplyStatus(updateApplyStatus)
+  }
+
   // restore option on mounted
   useEffect(() => {
     if (loadDataFromLocalStorage('option')) {
       setOption(loadDataFromLocalStorage('option'))
     }
+    if (loadDataFromLocalStorage('applyStatus')) {
+      setApplyStatus(loadDataFromLocalStorage('applyStatus'))
+    }
   }, [])
 
   useEffect(() => {
-    if (redmineCommits.length > 0) {
+    if (redmineCommits.length > 0 && applyStatus.isFetchRedmine) {
       changeLoadingStatus('isRedmineLoading', true)
       Promise.all(redmineCommits.map(commit => fetchRedmineIssue(getRedmineId(`${commit}`))))
         .then(data => {
@@ -96,7 +117,7 @@ const App: React.FC = () => {
   }, [redmineCommits])
 
   useEffect(() => {
-    if (jiraCommits.length > 0) {
+    if (jiraCommits.length > 0 && applyStatus.isFetchJira) {
       changeLoadingStatus('isJiraLoading', true)
       Promise.all(jiraCommits.map(commit => fetchJiraIssue(getJiraId(`${commit}`))))
         .then(data => {
@@ -153,6 +174,7 @@ const App: React.FC = () => {
 
   const handleFetchBranchDiff = async () => {
     saveDataToLocalStorage('option', option)
+    saveDataToLocalStorage('applyStatus', applyStatus)
     try {
       changeLoadingStatus('isGithubLoading', true)
       const response = await fetch(
@@ -383,8 +405,22 @@ const App: React.FC = () => {
             />
           </Box>
           <Divider light />
-          <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', m: 2 }}>
             <h3 className="w-[24px] mr-[8px] text-white bg-slate-500 text-center rounded-md">R</h3>
+            <div className="pl-2">
+              <FormControlLabel
+                  control={
+                    <Switch
+                      checked={applyStatus.isFetchRedmine}
+                      onChange={(e) => handleApplyChange('isFetchRedmine', e.target.checked)}
+                    />
+                  }
+                  label="Fetch Redmine"
+                />
+            </div>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
+            <DnsIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
             <TextField
               label="Redmine path"
               variant="standard"
@@ -405,8 +441,24 @@ const App: React.FC = () => {
             />
           </Box>
           <Divider light />
-          <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', m: 2 }}>
             <h3 className="w-[24px] mr-[8px] text-white bg-slate-500 text-center rounded-md">J</h3>
+            <div className="pl-2">
+              <FormGroup>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={applyStatus.isFetchJira}
+                      onChange={(e) => handleApplyChange('isFetchJira', e.target.checked)}
+                    />
+                  }
+                  label="Fetch Jira"
+                />
+              </FormGroup>
+            </div>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
+            <DnsIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
             <TextField
               label="Jira path"
               variant="standard"

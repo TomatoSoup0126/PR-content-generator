@@ -5,6 +5,11 @@ export interface LoadingStatus {
   isJiraLoading: String
 }
 
+export interface ApplyStatus {
+  isFetchRedmine: Boolean
+  isFetchJira: Boolean
+}
+
 export interface Option {
   owner: String
   repo: String

@@ -1,4 +1,4 @@
-# PR content generator
+# PR Content generator
 
 
 ## Overview

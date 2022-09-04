@@ -33,6 +33,7 @@ import Tab from '@mui/material/Tab'
 
 import BranchList from './components/BranchList'
 import IssueBlock from './components/IssueBlock'
+import SettingPanel from './components/SettingPanel'
 import ErrorList from './components/ErrorList'
 
 import { clipboard } from 'electron'
@@ -298,6 +299,7 @@ const App: React.FC = () => {
       <Tabs value={activeTab} onChange={handleTabChange} aria-label="icon tabs">
         <Tab icon={<AutoFixHighIcon />} aria-label="phone" />
         <Tab icon={<SettingsIcon />} aria-label="favorite" />
+        <Tab icon={<DnsIcon />} aria-label="test" />
       </Tabs>
       <TabPanel value={activeTab} index={0}>
         <>
@@ -517,6 +519,18 @@ const App: React.FC = () => {
             />
           </Box>
         </>
+      </TabPanel>
+
+      <TabPanel value={activeTab} index={2}>
+        <SettingPanel
+          option={option}
+          applyStatus={applyStatus}
+          branches={branches}
+          handleInput={handleInput}
+          handleDeleteBranchOption={handleDeleteBranchOption}
+          handleAddBranchOption={handleAddBranchOption}
+          handleApplyChange={handleApplyChange}
+        />
       </TabPanel>
     </main>
   )

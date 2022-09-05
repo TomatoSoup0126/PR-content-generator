@@ -11,9 +11,11 @@ export interface Option {
   githubToken: String
   redmineToken: String
   redminePath: String
+  isFetchRedmine: Boolean
   jiraAccount: String
   jiraToken: String
   jiraPath: String
+  isFetchJira: Boolean
 }
 
 export interface Branch {
@@ -35,7 +37,7 @@ export interface TabPanelProps {
 }
 
 export interface BranchListProps {
-  branches: String[]
+  branches: (String[] | undefined[])
   handleDeleteBranchOption: Function
   handleAddBranchOption: Function
   children: ReactNode
@@ -50,5 +52,14 @@ export interface IssueBlockProps {
 
 export interface ErrorListProps {
   errors: (String[] | undefined[])
+  children: ReactNode
+}
+
+export interface SettingPanelProps {
+  option: Object
+  branches: (String[] | undefined[])
+  handleUpdateOption: Function
+  handleDeleteBranchOption: Function
+  handleAddBranchOption: Function
   children: ReactNode
 }

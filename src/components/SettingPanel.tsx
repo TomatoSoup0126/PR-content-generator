@@ -1,26 +1,52 @@
-import { memo } from 'react'
+import { useState, memo } from 'react'
 import Box from '@mui/material/Box'
 import TextField from '@mui/material/TextField'
 import Divider from '@mui/material/Divider'
 import FormGroup from '@mui/material/FormGroup'
 import FormControlLabel from '@mui/material/FormControlLabel'
+import Button from '@mui/material/Button'
 import Switch from '@mui/material/Switch'
 import KeyIcon from '@mui/icons-material/Key'
 import ForkRightIcon from '@mui/icons-material/ForkRight'
 import DnsIcon from '@mui/icons-material/Dns'
+import SaveIcon from '@mui/icons-material/Save';
 import BranchList from './BranchList'
-import { ErrorListProps } from '../interface'
+import { SettingPanelProps, Option } from '../interface'
 
-const SettingPanel: React.FC = (props) => {
+
+
+const SettingPanel: React.FC<SettingPanelProps> = (props) => {
   const {
     option,
-    applyStatus,
     branches,
-    handleInput,
+    handleUpdateOption,
     handleDeleteBranchOption,
     handleAddBranchOption,
-    handleApplyChange
   } = props
+
+  const [childOption, setChildOption] = useState({
+    owner: '',
+    repo: '',
+    githubToken: '',
+    redmineToken: '',
+    redminePath: '',
+    isFetchRedmine: true,
+    jiraAccount: '',
+    jiraToken: '',
+    jiraPath: '',
+    isFetchJira: true,
+    ...option
+  })
+
+  const handleInput:Function = (value: string & boolean, key:keyof Option) => {
+    const updateOption = {
+      ...option,
+      ...childOption
+    }
+    updateOption[key] = value
+    setChildOption({...updateOption})
+  }
+
   return (
     <>
       <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
@@ -31,7 +57,7 @@ const SettingPanel: React.FC = (props) => {
           type="password"
           fullWidth
           onInput={(e) => handleInput((e.target as HTMLInputElement).value as string, 'githubToken')}
-          value={option.githubToken}
+          value={childOption.githubToken}
         />
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'flex-start', m: 2 }}>
@@ -51,8 +77,8 @@ const SettingPanel: React.FC = (props) => {
           <FormControlLabel
               control={
                 <Switch
-                  checked={applyStatus.isFetchRedmine}
-                  onChange={(e) => handleApplyChange('isFetchRedmine', e.target.checked)}
+                  checked={childOption.isFetchRedmine ?? true}
+                  onChange={(e) => handleInput(e.target.checked, 'isFetchRedmine')}
                 />
               }
               label="Fetch Redmine"
@@ -66,7 +92,7 @@ const SettingPanel: React.FC = (props) => {
           variant="standard"
           fullWidth
           onInput={(e) => handleInput((e.target as HTMLInputElement).value as string, 'redminePath')}
-          value={option.redminePath}
+          value={childOption.redminePath}
         />
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
@@ -77,7 +103,7 @@ const SettingPanel: React.FC = (props) => {
           type="password"
           fullWidth
           onInput={(e) => handleInput((e.target as HTMLInputElement).value as string, 'redmineToken')}
-          value={option.redmineToken}
+          value={childOption.redmineToken}
         />
       </Box>
       <Divider light />
@@ -88,8 +114,8 @@ const SettingPanel: React.FC = (props) => {
             <FormControlLabel
               control={
                 <Switch
-                  checked={applyStatus.isFetchJira}
-                  onChange={(e) => handleApplyChange('isFetchJira', e.target.checked)}
+                  checked={childOption.isFetchJira ?? true}
+                  onChange={(e) => handleInput(e.target.checked, 'isFetchJira')}
                 />
               }
               label="Fetch Jira"
@@ -104,7 +130,7 @@ const SettingPanel: React.FC = (props) => {
           variant="standard"
           fullWidth
           onInput={(e) => handleInput((e.target as HTMLInputElement).value as string, 'jiraPath')}
-          value={option.jiraPath}
+          value={childOption.jiraPath}
         />
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
@@ -113,7 +139,7 @@ const SettingPanel: React.FC = (props) => {
           label="Jira account"
           variant="standard"
           onInput={(e) => handleInput((e.target as HTMLInputElement).value, 'jiraAccount')}
-          value={option.jiraAccount}
+          value={childOption.jiraAccount}
           fullWidth
         />
         <div className="mx-2 text-gray-700" >/</div>
@@ -123,8 +149,17 @@ const SettingPanel: React.FC = (props) => {
           type="password"
           fullWidth
           onInput={(e) => handleInput((e.target as HTMLInputElement).value as string, 'jiraToken')}
-          value={option.jiraToken}
+          value={childOption.jiraToken}
         />
+      </Box>
+      <Divider light />
+      <Box sx={{ display: 'flex', alignItems: 'center', m: 2 }}>
+        <Button
+          variant="contained"
+          onClick={() => handleUpdateOption(childOption)}
+        >
+          <SaveIcon sx={{ color: 'white' }} />
+        </Button>
       </Box>
     </>
   )

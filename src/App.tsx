@@ -12,27 +12,22 @@ import Box from '@mui/material/Box'
 import GitHubIcon from '@mui/icons-material/GitHub'
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt'
 import ForkRightIcon from '@mui/icons-material/ForkRight'
-import KeyIcon from '@mui/icons-material/Key'
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh'
 import SettingsIcon from '@mui/icons-material/Settings'
-import DnsIcon from '@mui/icons-material/Dns'
 
 import TextField from '@mui/material/TextField'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import Select, { SelectChangeEvent } from '@mui/material/Select'
-import FormGroup from '@mui/material/FormGroup'
 import FormControl from '@mui/material/FormControl'
-import FormControlLabel from '@mui/material/FormControlLabel'
-import Switch from '@mui/material/Switch'
 import Button from '@mui/material/Button'
 import Divider from '@mui/material/Divider'
 import CircularProgress from '@mui/material/CircularProgress'
 import Tabs from '@mui/material/Tabs'
 import Tab from '@mui/material/Tab'
 
-import BranchList from './components/BranchList'
 import IssueBlock from './components/IssueBlock'
+import SettingPanel from './components/SettingPanel'
 import ErrorList from './components/ErrorList'
 
 import { clipboard } from 'electron'
@@ -46,9 +41,11 @@ const App: React.FC = () => {
     githubToken: '',
     redmineToken: '',
     redminePath: '',
+    isFetchRedmine: true,
     jiraAccount: '',
     jiraToken: '',
     jiraPath: '',
+    isFetchJira: true
   })
 
   const [branch, setBranch] = useState({
@@ -86,7 +83,7 @@ const App: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    if (redmineCommits.length > 0 && applyStatus.isFetchRedmine) {
+    if (redmineCommits.length > 0 && option.isFetchRedmine) {
       setIsRedmineLoading(true)
       Promise.all(redmineCommits.map(commit => fetchRedmineIssue(getRedmineId(`${commit}`))))
         .then(data => {
@@ -102,7 +99,7 @@ const App: React.FC = () => {
   }, [redmineCommits])
 
   useEffect(() => {
-    if (jiraCommits.length > 0 && applyStatus.isFetchJira) {
+    if (jiraCommits.length > 0 && option.isFetchJira) {
       setIsJiraLoading(true)
       Promise.all(jiraCommits.map(commit => fetchJiraIssue(getJiraId(`${commit}`))))
         .then(data => {
@@ -143,10 +140,20 @@ const App: React.FC = () => {
     }
   }
 
-  const handleInput = (value:string, key:keyof Option) => {
+  const handleInput:Function = (value:string, key:keyof Option) => {
     const updateOption = {...option}
+    // @ts-ignore
     updateOption[key] = value
     setOption(updateOption)
+  }
+
+  const handleUpdateOption = (updateOption:Option) => {
+    const newOption:Option = {
+      ...updateOption
+    }
+    // @ts-ignore
+    setOption(newOption)
+    saveDataToLocalStorage('option', newOption)
   }
 
   const handleBranchChange = (value:string, key:keyof Branch) => {
@@ -156,8 +163,6 @@ const App: React.FC = () => {
   }
 
   const handleFetchBranchDiff = async () => {
-    saveDataToLocalStorage('option', option)
-    saveDataToLocalStorage('applyStatus', applyStatus)
     setJiraCommits([])
     setRedmineCommits([])
     setErrors([])
@@ -396,7 +401,7 @@ const App: React.FC = () => {
           }
 
           {
-            !isRedmineLoading && jirIssues.length > 0 &&
+            !isRedmineLoading && redmineIssues.length > 0 &&
             (
               <IssueBlock
                 title="Redmine Issue"
@@ -412,111 +417,14 @@ const App: React.FC = () => {
       </TabPanel>
 
       <TabPanel value={activeTab} index={1}>
-        <>
-          <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
-            <KeyIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
-            <TextField
-              label="Github token"
-              variant="standard"
-              type="password"
-              fullWidth
-              onInput={(e) => handleInput((e.target as HTMLInputElement).value as string, 'githubToken')}
-              value={option.githubToken}
-            />
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', m: 2 }}>
-            <ForkRightIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
-            <BranchList
-              branches={branches}
-              handleDeleteBranchOption={handleDeleteBranchOption}
-              handleAddBranchOption={handleAddBranchOption}
-            >
-            </BranchList>
-          </Box>
-
-          <Divider light />
-          <Box sx={{ display: 'flex', alignItems: 'center', m: 2 }}>
-            <h3 className="w-[24px] mr-[8px] text-white bg-slate-500 text-center rounded-md">R</h3>
-            <div className="pl-2">
-              <FormControlLabel
-                  control={
-                    <Switch
-                      checked={applyStatus.isFetchRedmine}
-                      onChange={(e) => handleApplyChange('isFetchRedmine', e.target.checked)}
-                    />
-                  }
-                  label="Fetch Redmine"
-                />
-            </div>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
-            <DnsIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
-            <TextField
-              label="Redmine path"
-              variant="standard"
-              fullWidth
-              onInput={(e) => handleInput((e.target as HTMLInputElement).value as string, 'redminePath')}
-              value={option.redminePath}
-            />
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
-            <KeyIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
-            <TextField
-              label="Redmine token"
-              variant="standard"
-              type="password"
-              fullWidth
-              onInput={(e) => handleInput((e.target as HTMLInputElement).value as string, 'redmineToken')}
-              value={option.redmineToken}
-            />
-          </Box>
-          <Divider light />
-          <Box sx={{ display: 'flex', alignItems: 'center', m: 2 }}>
-            <h3 className="w-[24px] mr-[8px] text-white bg-slate-500 text-center rounded-md">J</h3>
-            <div className="pl-2">
-              <FormGroup>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={applyStatus.isFetchJira}
-                      onChange={(e) => handleApplyChange('isFetchJira', e.target.checked)}
-                    />
-                  }
-                  label="Fetch Jira"
-                />
-              </FormGroup>
-            </div>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
-            <DnsIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
-            <TextField
-              label="Jira path"
-              variant="standard"
-              fullWidth
-              onInput={(e) => handleInput((e.target as HTMLInputElement).value as string, 'jiraPath')}
-              value={option.jiraPath}
-            />
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
-            <KeyIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
-            <TextField
-              label="Jira account"
-              variant="standard"
-              onInput={(e) => handleInput((e.target as HTMLInputElement).value, 'jiraAccount')}
-              value={option.jiraAccount}
-              fullWidth
-            />
-            <div className="mx-2 text-gray-700" >/</div>
-            <TextField
-              label="Jira token"
-              variant="standard"
-              type="password"
-              fullWidth
-              onInput={(e) => handleInput((e.target as HTMLInputElement).value as string, 'jiraToken')}
-              value={option.jiraToken}
-            />
-          </Box>
-        </>
+        <SettingPanel
+          option={option}
+          branches={branches}
+          handleUpdateOption={handleUpdateOption}
+          handleDeleteBranchOption={handleDeleteBranchOption}
+          handleAddBranchOption={handleAddBranchOption}
+          children={null}
+        />
       </TabPanel>
     </main>
   )

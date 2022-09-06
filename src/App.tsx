@@ -324,8 +324,14 @@ const App: React.FC = () => {
   }
 
   return (
-    <main className="container mx-auto p-2">
-      <Tabs value={activeTab} onChange={handleTabChange} aria-label="icon tabs">
+    <main className="container mx-auto p-2 pt-0">
+      <Tabs
+        value={activeTab}
+        onChange={handleTabChange}
+        aria-label="icon tabs"
+        sx={{ position: 'sticky', top: 0, backgroundColor: 'white' }}
+        className="z-10"
+      >
         <Tab icon={<AutoFixHighIcon />} aria-label="phone" />
         <Tab icon={<SettingsIcon />} aria-label="favorite" />
       </Tabs>

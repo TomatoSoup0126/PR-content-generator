@@ -7,10 +7,11 @@ import FormControlLabel from '@mui/material/FormControlLabel'
 import SpeedDial from '@mui/material/SpeedDial'
 import Switch from '@mui/material/Switch'
 import KeyIcon from '@mui/icons-material/Key'
+import BookIcon from '@mui/icons-material/Book';
 import ForkRightIcon from '@mui/icons-material/ForkRight'
 import DnsIcon from '@mui/icons-material/Dns'
 import SaveIcon from '@mui/icons-material/Save'
-import BranchList from './BranchList'
+import GitHubIcon from '@mui/icons-material/GitHub'
 import EditableList from './EditableList'
 import { SettingPanelProps, Option } from '../interface'
 
@@ -18,9 +19,12 @@ const SettingPanel: React.FC<SettingPanelProps> = (props) => {
   const {
     option,
     branches,
+    repos,
     handleUpdateOption,
     handleDeleteBranchOption,
     handleAddBranchOption,
+    handleDeleteRepoOption,
+    handleAddRepoOption
   } = props
 
   const [childOption, setChildOption] = useState({
@@ -48,6 +52,10 @@ const SettingPanel: React.FC<SettingPanelProps> = (props) => {
 
   return (
     <>
+      <Box sx={{ display: 'flex', alignItems: 'center', m: 2 }}>
+        <GitHubIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
+        <h3 className="mr-[8px] text-center rounded-md">Github</h3>
+      </Box>
       <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
         <KeyIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
         <TextField
@@ -59,24 +67,39 @@ const SettingPanel: React.FC<SettingPanelProps> = (props) => {
           value={childOption.githubToken}
         />
       </Box>
+
       <Box sx={{ display: 'flex', alignItems: 'flex-start', m: 2 }}>
-        <ForkRightIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
-        <BranchList
-          branches={branches}
-          handleDeleteBranchOption={handleDeleteBranchOption}
-          handleAddBranchOption={handleAddBranchOption}
-        >
-        </BranchList>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', width: '50%', pr: 2 }}>
+          <BookIcon sx={{ color: 'action.active', mr: 1, mt: 1.5 }} />
+          <EditableList
+            label="repository"
+            list={repos}
+            handleDeleteItem={handleDeleteRepoOption}
+            handleAddItem={handleAddRepoOption}
+          >
+          </EditableList>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', width: '50%', pl: 2 }}>
+          <ForkRightIcon sx={{ color: 'action.active', mr: 1, my: 1.5 }} />
+          <EditableList
+            label="branch"
+            list={branches}
+            handleDeleteItem={handleDeleteBranchOption}
+            handleAddItem={handleAddBranchOption}
+          >
+          </EditableList>
+        </Box>
       </Box>
-      <Box sx={{ display: 'flex', alignItems: 'flex-start', m: 2 }}>
-        <ForkRightIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
+      {/* <Box sx={{ display: 'flex', alignItems: 'flex-start', m: 2 }}>
+        <BookIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
         <EditableList
-          list={branches}
-          handleDeleteItem={handleDeleteBranchOption}
-          handleAddItem={handleAddBranchOption}
+          label="repository"
+          list={repos}
+          handleDeleteItem={handleDeleteRepoOption}
+          handleAddItem={handleAddRepoOption}
         >
         </EditableList>
-      </Box>
+      </Box> */}
 
       <Divider light />
       <Box sx={{ display: 'flex', alignItems: 'center', m: 2 }}>

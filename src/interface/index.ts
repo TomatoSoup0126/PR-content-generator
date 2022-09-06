@@ -36,11 +36,12 @@ export interface TabPanelProps {
   value: number;
 }
 
-export interface BranchListProps {
-  branches: (String[] | undefined[])
-  handleDeleteBranchOption: Function
-  handleAddBranchOption: Function
-  children: ReactNode
+export interface EditableListProps {
+  label: String
+  list: (String[] | undefined[])
+  handleDeleteItem: Function
+  handleAddItem: Function
+  children?: ReactNode
 }
 
 export interface IssueBlockProps {

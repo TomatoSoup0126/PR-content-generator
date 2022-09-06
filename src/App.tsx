@@ -1,6 +1,5 @@
-import { useState, useEffect, useMemo, SyntheticEvent } from 'react'
+import { useState, useEffect, SyntheticEvent } from 'react'
 import {
-  ApplyStatus,
   Option,
   Branch,
   Commit,
@@ -37,7 +36,6 @@ const App: React.FC = () => {
 
   const [option, setOption] = useState({
     owner: '',
-    repo: '',
     githubToken: '',
     redmineToken: '',
     redminePath: '',
@@ -48,21 +46,21 @@ const App: React.FC = () => {
     isFetchJira: true
   })
 
+  const [repoName, setRepoName] = useState('')
+
   const [branch, setBranch] = useState({
     into: '',
     from: ''
   })
 
-  const [applyStatus, setApplyStatus] = useState({
-    isFetchRedmine: true,
-    isFetchJira: true
-  })
+  const [branches, setBranches] = useState<String[]>(['dev', 'release', 'master'])
+  const [repos, setRepos] = useState<String[]>(['demo_repo'])
 
   const [jiraCommits, setJiraCommits] = useState<String[] | undefined[]>([])
   const [jirIssues, setJirIssues] = useState<Commit[] | undefined[]>([])
   const [redmineCommits, setRedmineCommits] = useState<String[] | undefined[]>([])
   const [redmineIssues, setRedmineIssues] = useState<Commit[] | undefined[]>([])
-  const [branches, setBranches] = useState<String[]>(['dev', 'release', 'master'])
+
   const [errors, setErrors] = useState<String[] | undefined[]>([])
 
   const [isGithubLoading, setIsGithubLoading] = useState(false)
@@ -76,11 +74,11 @@ const App: React.FC = () => {
     if (loadDataFromLocalStorage('option')) {
       setOption(loadDataFromLocalStorage('option'))
     }
-    if (loadDataFromLocalStorage('applyStatus')) {
-      setApplyStatus(loadDataFromLocalStorage('applyStatus'))
-    }
     if (loadDataFromLocalStorage('branches')) {
       setBranches(loadDataFromLocalStorage('branches'))
+    }
+    if (loadDataFromLocalStorage('repos')) {
+      setRepos(loadDataFromLocalStorage('repos'))
     }
   }, [])
 
@@ -198,7 +196,7 @@ const App: React.FC = () => {
     try {
       setIsGithubLoading(true)
       const response = await fetch(
-        `https://api.github.com/repos/${option.owner}/${option.repo}/compare/${branch.into}...${branch.from}`,
+        `https://api.github.com/repos/${option.owner}/${repoName}/compare/${branch.into}...${branch.from}`,
         {
           headers: {
             'Authorization': `Bearer ${option.githubToken}`
@@ -287,6 +285,18 @@ const App: React.FC = () => {
     saveDataToLocalStorage('branches', updatedBranches)
   }
 
+  const handleDeleteRepoOption = (deleteItem:string) => {
+    const updatedRepos = repos.filter(item => item !== deleteItem)
+    setRepos(updatedRepos)
+    saveDataToLocalStorage('repos', updatedRepos)
+  }
+
+  const handleAddRepoOption = (addItem:string) => {
+    const updatedRepos = [...repos, addItem]
+    setRepos(updatedRepos)
+    saveDataToLocalStorage('repos', updatedRepos)
+  }
+
   const handleTabChange = (event:SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
   }
@@ -346,13 +356,19 @@ const App: React.FC = () => {
               value={option.owner}
             />
             <div className="mx-2 text-gray-700" >/</div>
-            <TextField
-              label="REPO"
-              variant="standard"
-              onInput={(e) => handleInput((e.target as HTMLInputElement).value, 'repo')}
-              value={option.repo}
-              fullWidth
-            />
+            <FormControl variant="standard" fullWidth>
+              <InputLabel id="repo-select-label">REPO</InputLabel>
+              <Select
+                labelId="repo-select-label"
+                id="demo-simple-select"
+                value={repoName}
+                label="From"
+                onChange={(e:SelectChangeEvent) => setRepoName(e.target.value as string)}
+              >
+                {/* @ts-ignore */}
+                { repos.map(item => (<MenuItem value={item} key={`repo_${item}`}>{item}</MenuItem>)) }
+              </Select>
+            </FormControl>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
             <ForkRightIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
@@ -454,8 +470,6 @@ const App: React.FC = () => {
               </IssueBlock>
             )
           }
-
-
         </>
       </TabPanel>
 
@@ -463,10 +477,12 @@ const App: React.FC = () => {
         <SettingPanel
           option={option}
           branches={branches}
+          repos={repos}
           handleUpdateOption={handleUpdateOption}
           handleDeleteBranchOption={handleDeleteBranchOption}
           handleAddBranchOption={handleAddBranchOption}
-          children={null}
+          handleDeleteRepoOption={handleDeleteRepoOption}
+          handleAddRepoOption={handleAddRepoOption}
         />
       </TabPanel>
     </main>

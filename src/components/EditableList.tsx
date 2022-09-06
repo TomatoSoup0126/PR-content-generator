@@ -7,10 +7,10 @@ import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton'
 import DeleteIcon from '@mui/icons-material/Delete'
 import AddCircleIcon from '@mui/icons-material/AddCircle'
-// import { EditableListProps } from '../interface'
+import { EditableListProps } from '../interface'
 
 
-const EditableList: React.FC = (props) => {
+const EditableList: React.FC<EditableListProps> = (props) => {
   const { label, list, handleDeleteItem, handleAddItem } = props
   const [newItem, setNewItem] = useState('')
 

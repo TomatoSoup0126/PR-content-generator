@@ -46,6 +46,7 @@ export interface BranchListProps {
 export interface IssueBlockProps {
   title: String
   issues: (Commit[] | undefined[])
+  content?: String
   handleCopyEvent: Function
   children: ReactNode
 }

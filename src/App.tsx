@@ -69,6 +69,8 @@ const App: React.FC = () => {
   const [isRedmineLoading, setIsRedmineLoading] = useState(false)
   const [isJiraLoading, setIsJiraLoading] = useState(false)
 
+  const [title, setTitle] = useState('')
+
   // restore option on mounted
   useEffect(() => {
     if (loadDataFromLocalStorage('option')) {
@@ -104,6 +106,7 @@ const App: React.FC = () => {
       Promise.all(jiraCommits.map(commit => fetchJiraIssue(getJiraId(`${commit}`))))
         .then(data => {
           const excludeStatusList = ['CLOSED']
+          // @ts-ignore
           const sortedData = data.sort((a, b) => a?.id - b?.id).filter(item => !excludeStatusList.some(status => status === item?.status))
           // @ts-ignore
           setJirIssues(sortedData)
@@ -113,6 +116,32 @@ const App: React.FC = () => {
       setJirIssues([])
     }
   }, [jiraCommits])
+
+  const redmineTagMap = {
+    dev: 'done',
+    staging: 'done',
+    release: 'release',
+    master: 'production'
+  }
+  useEffect(() => {
+    let jiraIdInTitle = ''
+    let redmineIdsInTitle = ''
+    if (option.isFetchJira && jirIssues.length > 0) {
+      const jiraIds = jirIssues.map(issue => `[${issue?.id}]`)
+      jiraIdInTitle = jiraIds.join('')
+    }
+    if (option.isFetchRedmine && redmineIssues.length > 0) {
+      const redmineIds = redmineIssues.map(issue => `#${issue?.id}`)
+      // @ts-ignore
+      redmineIdsInTitle = `(${redmineTagMap[branch?.from]} ${redmineIds.join(', ')})`
+    }
+    if (branch.from && branch.into) {
+      setTitle(`[${branch.into}]${jiraIdInTitle} update from ${branch.from} ${redmineIdsInTitle}`)
+    } else {
+      setTitle('')
+    }
+
+  }, [jirIssues, redmineIssues, branch])
 
   const jiraPattern: RegExp = /\[([a-zA-Z\s]+)-\d{4}\]/ // [OW-1234]
   const matchJiraPatternCommit = (commits:String[]) => {
@@ -218,7 +247,7 @@ const App: React.FC = () => {
       )
       const { fields } = await response.json()
       const data = {
-        id: fields.key,
+        id,
         subject: fields.summary,
         status: fields.status.name,
         markdown: `- ${fields.summary} [${id}](${option.jiraPath}/browse/${id})`
@@ -242,6 +271,10 @@ const App: React.FC = () => {
     clipboard.writeText(copyContent)
   }
 
+  const handleCopyTitle = () => {
+    clipboard.writeText(title)
+  }
+
   const handleDeleteBranchOption = (deleteItem:string) => {
     const updatedBranches = branches.filter(item => item !== deleteItem)
     setBranches(updatedBranches)
@@ -252,14 +285,6 @@ const App: React.FC = () => {
     const updatedBranches = [...branches, addItem]
     setBranches(updatedBranches)
     saveDataToLocalStorage('branches', updatedBranches)
-  }
-
-  const handleApplyChange = (key: keyof ApplyStatus, value:boolean) => {
-    const updateApplyStatus = {
-      ...applyStatus
-    }
-    updateApplyStatus[key] = value
-    setApplyStatus(updateApplyStatus)
   }
 
   const handleTabChange = (event:SyntheticEvent, newValue: number) => {
@@ -388,6 +413,18 @@ const App: React.FC = () => {
             }
           </Box>
           <ErrorList errors={errors} children={null} />
+          { title &&
+            (
+              <IssueBlock
+                title="PR Title"
+                issues={[]}
+                content={title}
+                handleCopyEvent={handleCopyTitle}
+              >
+              </IssueBlock>
+            )
+          }
+
           {
             !isJiraLoading && jirIssues.length > 0 &&
             (

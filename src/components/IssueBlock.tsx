@@ -5,7 +5,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import { IssueBlockProps } from '../interface'
 
 const IssueBlock: React.FC<IssueBlockProps> = (props) => {
-  const { title, issues, handleCopyEvent } = props
+  const { title, issues, handleCopyEvent, content } = props
   return (
     <Box sx={{ m: 2 }}>
       <h1 className='text-xl mb-2 mr-2'>
@@ -17,6 +17,7 @@ const IssueBlock: React.FC<IssueBlockProps> = (props) => {
           />
         </Button>
         { issues.map((issue, index) => (<p key={index} className='truncate text-base'>{issue?.markdown}</p>)) }
+        { content && (<p className="text-base">{content}</p>) }
       </h1>
     </Box>
   )

@@ -60,8 +60,11 @@ export interface ErrorListProps {
 export interface SettingPanelProps {
   option: Object
   branches: (String[] | undefined[])
+  repos: (String[] | undefined[])
   handleUpdateOption: Function
   handleDeleteBranchOption: Function
   handleAddBranchOption: Function
-  children: ReactNode
+  handleDeleteRepoOption: Function
+  handleAddRepoOption: Function
+  children?: ReactNode
 }

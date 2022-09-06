@@ -1,12 +1,15 @@
 # PR Content generator
 
+## Download
+[Release 2.2](https://github.com/TomatoSoup0126/PR-content-generator/releases/tag/v2.2)
 
 ## Overview
 - Fetch branch diff by github api
 - Fetch issues on Jira and Redmine issue api
 - Export issues to markdown
 
-![screenshot.png](https://github.com/TomatoSoup0126/PR-content-generator/blob/master/public/screenshot.png?raw=true)
+![action.png](https://github.com/TomatoSoup0126/PR-content-generator/blob/master/public/action.png?raw=true)
+![setting.png](https://github.com/TomatoSoup0126/PR-content-generator/blob/master/public/setting.png?raw=true)
 ## Quick start
 
 ```sh

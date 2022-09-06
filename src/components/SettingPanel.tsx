@@ -9,8 +9,9 @@ import Switch from '@mui/material/Switch'
 import KeyIcon from '@mui/icons-material/Key'
 import ForkRightIcon from '@mui/icons-material/ForkRight'
 import DnsIcon from '@mui/icons-material/Dns'
-import SaveIcon from '@mui/icons-material/Save';
+import SaveIcon from '@mui/icons-material/Save'
 import BranchList from './BranchList'
+import EditableList from './EditableList'
 import { SettingPanelProps, Option } from '../interface'
 
 const SettingPanel: React.FC<SettingPanelProps> = (props) => {
@@ -66,6 +67,15 @@ const SettingPanel: React.FC<SettingPanelProps> = (props) => {
           handleAddBranchOption={handleAddBranchOption}
         >
         </BranchList>
+      </Box>
+      <Box sx={{ display: 'flex', alignItems: 'flex-start', m: 2 }}>
+        <ForkRightIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
+        <EditableList
+          list={branches}
+          handleDeleteItem={handleDeleteBranchOption}
+          handleAddItem={handleAddBranchOption}
+        >
+        </EditableList>
       </Box>
 
       <Divider light />

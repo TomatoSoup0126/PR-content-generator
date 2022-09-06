@@ -85,7 +85,9 @@ const App: React.FC = () => {
   useEffect(() => {
     if (redmineCommits.length > 0 && option.isFetchRedmine) {
       setIsRedmineLoading(true)
-      Promise.all(redmineCommits.map(commit => fetchRedmineIssue(getRedmineId(`${commit}`))))
+      const commitIds = redmineCommits.map(commit => getRedmineId(`${commit}`))
+      const uniqueCommitIds = Array.from(new Set(commitIds))
+      Promise.all(uniqueCommitIds.map(id => fetchRedmineIssue(id)))
         .then(data => {
           const excludeStatusList = ['Close', 'On Production']
           const sortedData = data.sort((a, b) => a?.id - b?.id).filter(item => !excludeStatusList.some(status => status === item?.status))
@@ -101,7 +103,9 @@ const App: React.FC = () => {
   useEffect(() => {
     if (jiraCommits.length > 0 && option.isFetchJira) {
       setIsJiraLoading(true)
-      Promise.all(jiraCommits.map(commit => fetchJiraIssue(getJiraId(`${commit}`))))
+      const commitIds = jiraCommits.map(commit => getJiraId(`${commit}`))
+      const uniqueCommitIds = Array.from(new Set(commitIds))
+      Promise.all(uniqueCommitIds.map(id => fetchJiraIssue(id)))
         .then(data => {
           const excludeStatusList = ['CLOSED']
           // @ts-ignore

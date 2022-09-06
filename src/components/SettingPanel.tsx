@@ -4,7 +4,7 @@ import TextField from '@mui/material/TextField'
 import Divider from '@mui/material/Divider'
 import FormGroup from '@mui/material/FormGroup'
 import FormControlLabel from '@mui/material/FormControlLabel'
-import Button from '@mui/material/Button'
+import SpeedDial from '@mui/material/SpeedDial'
 import Switch from '@mui/material/Switch'
 import KeyIcon from '@mui/icons-material/Key'
 import ForkRightIcon from '@mui/icons-material/ForkRight'
@@ -12,8 +12,6 @@ import DnsIcon from '@mui/icons-material/Dns'
 import SaveIcon from '@mui/icons-material/Save';
 import BranchList from './BranchList'
 import { SettingPanelProps, Option } from '../interface'
-
-
 
 const SettingPanel: React.FC<SettingPanelProps> = (props) => {
   const {
@@ -152,15 +150,14 @@ const SettingPanel: React.FC<SettingPanelProps> = (props) => {
           value={childOption.jiraToken}
         />
       </Box>
-      <Divider light />
-      <Box sx={{ display: 'flex', alignItems: 'center', m: 2 }}>
-        <Button
-          variant="contained"
-          onClick={() => handleUpdateOption(childOption)}
-        >
-          <SaveIcon sx={{ color: 'white' }} />
-        </Button>
-      </Box>
+      <Box sx={{ height: 64 }} />
+      <SpeedDial
+        ariaLabel="save"
+        sx={{ position: 'fixed', bottom: 16, right: 16 }}
+        icon={<SaveIcon />}
+        onClick={() => handleUpdateOption(childOption)}
+      >
+      </SpeedDial>
     </>
   )
 }

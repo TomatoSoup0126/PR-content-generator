@@ -119,7 +119,7 @@ const App: React.FC = () => {
     }
   }, [jiraCommits])
 
-  const redmineTagMap = {
+  const redmineTagMap: {[index: string]:any} = {
     dev: 'done',
     staging: 'done',
     release: 'release',
@@ -134,8 +134,8 @@ const App: React.FC = () => {
     }
     if (option.isFetchRedmine && redmineIssues.length > 0) {
       const redmineIds = redmineIssues.map(issue => `#${issue?.id}`)
-      // @ts-ignore
-      redmineIdsInTitle = `(${redmineTagMap[branch?.from]} ${redmineIds.join(', ')})`
+      const redmineTag = redmineTagMap[branch.into] || ''
+      redmineIdsInTitle = `(${redmineTag} ${redmineIds.join(', ')})`
     }
     if (branch.from && branch.into) {
       setTitle(`[${branch.into}]${jiraIdInTitle} update from ${branch.from} ${redmineIdsInTitle}`)

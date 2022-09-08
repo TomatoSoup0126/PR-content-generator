@@ -6,8 +6,6 @@ export interface ApplyStatus {
 }
 
 export interface Option {
-  owner: String
-  repo: String
   githubToken: String
   redmineToken: String
   redminePath: String
@@ -49,12 +47,12 @@ export interface IssueBlockProps {
   issues: (Commit[] | undefined[])
   content?: String
   handleCopyEvent: Function
-  children: ReactNode
+  children?: ReactNode
 }
 
 export interface ErrorListProps {
   errors: (String[] | undefined[])
-  children: ReactNode
+  children?: ReactNode
 }
 
 export interface SettingPanelProps {
@@ -67,4 +65,19 @@ export interface SettingPanelProps {
   handleDeleteRepoOption: Function
   handleAddRepoOption: Function
   children?: ReactNode
+}
+export interface ActionPanelProps {
+  option: Option
+  branches: (String[] | undefined[])
+  repos: (String[] | undefined[])
+  loadDataFromLocalStorage: Function
+  saveDataToLocalStorage: Function
+  children?: ReactNode
+}
+
+export interface Issue {
+  id: String
+  subject: String
+  status: String
+  markdown: String
 }

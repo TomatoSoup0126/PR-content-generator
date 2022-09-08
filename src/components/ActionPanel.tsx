@@ -1,7 +1,6 @@
 import { useState, useEffect, memo } from 'react'
 import {
   Commit,
-  Option,
   Issue,
   ActionPanelProps
 } from '../interface'

@@ -28,8 +28,6 @@ const SettingPanel: React.FC<SettingPanelProps> = (props) => {
   } = props
 
   const [childOption, setChildOption] = useState({
-    owner: '',
-    repo: '',
     githubToken: '',
     redmineToken: '',
     redminePath: '',

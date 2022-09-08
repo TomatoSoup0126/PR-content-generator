@@ -51,19 +51,18 @@ const ActionPanel: React.FC<ActionPanelProps> = (props) => {
   const [redmineCommits, setRedmineCommits] = useState<String[] | undefined[]>([])
   const [redmineIssues, setRedmineIssues] = useState<Commit[] | undefined[]>([])
 
-
-  const handleCopyTitle = () => {
-    clipboard.writeText(title)
-  }
-
   const handleCopyRedmineIssues = () => {
     const copyContent = redmineIssues.map(issue => issue?.markdown).join('\r\n')
-    clipboard.writeText(copyContent)
+    writeToClipboard(copyContent)
   }
 
   const handleCopyJiraIssues = () => {
     const copyContent = jirIssues.map(issue => issue?.markdown).join('\r\n')
-    clipboard.writeText(copyContent)
+    writeToClipboard(copyContent)
+  }
+
+  const writeToClipboard = (content: string) => {
+    clipboard.writeText(content)
   }
 
   const handleFetchBranchDiff = async () => {
@@ -101,10 +100,6 @@ const ActionPanel: React.FC<ActionPanelProps> = (props) => {
       const res = await response.json()
       const { id, subject, status } = res.issue
       const data: Issue = {
-        // id,
-        // subject: fields.summary,
-        // status: fields.status.name,
-        // markdown: `- ${fields.summary} [${id}](${option.jiraPath}/browse/${id})`
         id,
         subject,
         status: status.name,
@@ -242,6 +237,48 @@ const ActionPanel: React.FC<ActionPanelProps> = (props) => {
     }
   }
 
+  const circularProgressList = [
+    {
+      key: 'githubCircularProgress',
+      loading: isGithubLoading,
+      color: grey[900]
+    },
+    {
+      key: 'redmineCircularProgress',
+      loading: isRedmineLoading,
+      color: red[900]
+    },
+    {
+      key: 'jiraCircularProgress',
+      loading: isJiraLoading,
+      color: blue[900]
+    }
+  ]
+
+  const resultBlockList = [
+    {
+      title: 'PR Title',
+      displayRole: title,
+      issues: [],
+      content: title,
+      handleCopyEvent: () => writeToClipboard(title)
+    },
+    {
+      title: 'Jira Issue',
+      displayRole: !isJiraLoading && jirIssues.length > 0,
+      issues: jirIssues,
+      content: '',
+      handleCopyEvent: handleCopyJiraIssues,
+    },
+    {
+      title: 'Redmine Issue',
+      displayRole: !isRedmineLoading && redmineIssues.length > 0,
+      issues: redmineIssues,
+      content: '',
+      handleCopyEvent: handleCopyRedmineIssues,
+    },
+  ]
+
   return (
     <>
       <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
@@ -307,65 +344,30 @@ const ActionPanel: React.FC<ActionPanelProps> = (props) => {
           <AutoFixHighIcon sx={{ color: 'white' }} />
         </Button>
         {
-          isGithubLoading &&
-          (
-            <Box sx={{ display: 'flex' }}>
-              <CircularProgress sx={{ ml:2, color:grey[900] }} size={30} />
+          circularProgressList.map(circularProgress => circularProgress.loading && (
+            <Box
+              sx={{ display: 'flex' }}
+              key={circularProgress.key}
+            >
+              <CircularProgress sx={{ ml:2, color: circularProgress.color }} size={30} />
             </Box>
-          )
-        }
-        {
-          isRedmineLoading &&
-          (
-            <Box sx={{ display: 'flex' }}>
-              <CircularProgress sx={{ ml:2, color:red[900] }} size={30} />
-            </Box>
-          )
-        }
-        {
-          isJiraLoading &&
-          (
-            <Box sx={{ display: 'flex' }}>
-              <CircularProgress sx={{ ml:2, color:blue[900] }} size={30} />
-            </Box>
-          )
+          ))
         }
       </Box>
       <ErrorList errors={errors} children={null} />
-      { title &&
-        (
-          <IssueBlock
-            title="PR Title"
-            issues={[]}
-            content={title}
-            handleCopyEvent={handleCopyTitle}
-          >
-          </IssueBlock>
-        )
-      }
-
       {
-        !isJiraLoading && jirIssues.length > 0 &&
-        (
-          <IssueBlock
-            title="Jira Issue"
-            issues={jirIssues}
-            handleCopyEvent={handleCopyJiraIssues}
-          >
-          </IssueBlock>
-        )
-      }
-
-      {
-        !isRedmineLoading && redmineIssues.length > 0 &&
-        (
-          <IssueBlock
-            title="Redmine Issue"
-            issues={redmineIssues}
-            handleCopyEvent={handleCopyRedmineIssues}
-          >
-          </IssueBlock>
-        )
+        resultBlockList.map(resultBlock => {
+          return resultBlock.displayRole && (
+            <IssueBlock
+              key={resultBlock.title}
+              title={resultBlock.title}
+              issues={resultBlock.issues}
+              content={resultBlock.content}
+              handleCopyEvent={resultBlock.handleCopyEvent}
+            >
+            </IssueBlock>
+          )
+        })
       }
     </>
   )

@@ -1,7 +1,7 @@
 # PR Content generator
 
 ## Download
-[Release 2.5](https://github.com/TomatoSoup0126/PR-content-generator/releases/tag/v2.4)
+[Release 2.5](https://github.com/TomatoSoup0126/PR-content-generator/releases/tag/v2.5)
 
 ## Overview
 - Fetch branch diff by github api

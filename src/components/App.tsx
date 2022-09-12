@@ -1,71 +1,24 @@
-import { useState, useEffect, createContext, useContext, useMemo, SyntheticEvent } from 'react'
+import { useState, useEffect, createContext, useContext, SyntheticEvent } from 'react'
 import {
   Option,
   TabPanelProps
-} from './interface'
-
-import CssBaseline from '@mui/material/CssBaseline'
+} from '../interface'
 
 import IconButton from '@mui/material/IconButton'
 import Box from '@mui/material/Box'
 import Tabs from '@mui/material/Tabs'
 import Tab from '@mui/material/Tab'
-import { useTheme, ThemeProvider, createTheme } from '@mui/material/styles'
+import { useTheme } from '@mui/material/styles'
 
 import DarkModeIcon from '@mui/icons-material/DarkMode'
 import LightModeIcon from '@mui/icons-material/LightMode'
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh'
 import SettingsIcon from '@mui/icons-material/Settings'
 
-import ActionPanel from './components/ActionPanel'
-import SettingPanel from './components/SettingPanel'
+import ActionPanel from './ActionPanel'
+import SettingPanel from './SettingPanel'
 
-const ColorModeContext = createContext({ toggleColorMode: () => {} })
-
-const ThemeWrapper: React.FC = () => {
-  const [mode, setMode] = useState<'light' | 'dark'>('light')
-  const colorMode = useMemo(
-    () => ({
-      toggleColorMode: () => {
-        setMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light'))
-      },
-    }),
-    [],
-  )
-
-  const theme = useMemo(
-    () =>
-      createTheme({
-        palette: {
-          mode,
-        },
-      }),
-    [mode],
-  )
-
-  const restoreTheme = () => {
-    if (localStorage.getItem('theme')) {
-      const saveMode = JSON.parse(`${localStorage.getItem('theme')}`)
-      if (saveMode !== mode) {
-        setMode(saveMode)
-      }
-    }
-  }
-
-  useEffect(() => {
-    restoreTheme()
-  }, [])
-
-  return (
-    <ColorModeContext.Provider value={colorMode}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <App />
-      </ThemeProvider>
-    </ColorModeContext.Provider>
-  )
-}
-
+import { ColorModeContext } from '../ThemeWrapper'
 
 const App: React.FC = () => {
   const theme = useTheme()
@@ -227,4 +180,4 @@ const App: React.FC = () => {
   )
 }
 
-export default ThemeWrapper
+export default App

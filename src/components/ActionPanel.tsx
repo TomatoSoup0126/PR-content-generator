@@ -2,7 +2,8 @@ import { useState, useEffect, memo } from 'react'
 import {
   Commit,
   Issue,
-  ActionPanelProps
+  ActionPanelProps,
+  ActionRestoreList
 } from '../interface'
 
 import { useTheme } from '@mui/material/styles'
@@ -69,8 +70,33 @@ const ActionPanel: React.FC<ActionPanelProps> = (props) => {
     clipboard.writeText(content)
   }
 
+  const restoreList: ActionRestoreList = {
+    owner: {
+      data: owner,
+      setter: setOwner
+    },
+    repoName: {
+      data: repoName,
+      setter: setRepoName
+    },
+    branchFrom: {
+      data: branchFrom,
+      setter: setBranchFrom
+    },
+    branchInto: {
+      data: branchInto,
+      setter: setBranchInto
+    }
+  }
+
+  const saveOptionsToStorage = () => {
+    Object.keys(restoreList).forEach(key => {
+      saveDataToLocalStorage(key, restoreList[key].data)
+    })
+  }
+
   const handleFetchBranchDiff = async () => {
-    saveDataToLocalStorage('owner', owner)
+    saveOptionsToStorage()
     setJiraCommits([])
     setRedmineCommits([])
     setErrors([])
@@ -147,9 +173,12 @@ const ActionPanel: React.FC<ActionPanelProps> = (props) => {
   }
 
   useEffect(() => {
-    if (loadDataFromLocalStorage('owner')) {
-      setOwner(loadDataFromLocalStorage('owner'))
-    }
+    Object.keys(restoreList).forEach(key => {
+      const restoreData = loadDataFromLocalStorage(key)
+      if (restoreData) {
+        restoreList[key].setter(restoreData)
+      }
+    })
   }, [])
 
   useEffect(() => {

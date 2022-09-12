@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import { Dispatch, ReactNode, SetStateAction } from 'react'
 
 export interface ApplyStatus {
   isFetchRedmine: Boolean
@@ -80,4 +80,11 @@ export interface Issue {
   subject: String
   status: String
   markdown: String
+}
+
+export interface ActionRestoreList {
+  [key: string]: {
+    data: String
+    setter: Dispatch<SetStateAction<string>>
+  }
 }

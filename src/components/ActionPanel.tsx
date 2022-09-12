@@ -5,6 +5,8 @@ import {
   ActionPanelProps
 } from '../interface'
 
+import { useTheme } from '@mui/material/styles'
+
 import { grey, red, blue } from '@mui/material/colors';
 import Box from '@mui/material/Box'
 import TextField from '@mui/material/TextField'
@@ -34,6 +36,9 @@ const ActionPanel: React.FC<ActionPanelProps> = (props) => {
     loadDataFromLocalStorage,
     saveDataToLocalStorage
   } = props
+
+  const theme = useTheme()
+  const isDarkMode = theme.palette.mode === 'dark'
 
   const [owner, setOwner] = useState('')
   const [repoName, setRepoName] = useState('')
@@ -240,17 +245,17 @@ const ActionPanel: React.FC<ActionPanelProps> = (props) => {
     {
       key: 'githubCircularProgress',
       loading: isGithubLoading,
-      color: grey[900]
+      color: () => isDarkMode ? grey[200] : grey[900]
     },
     {
       key: 'redmineCircularProgress',
       loading: isRedmineLoading,
-      color: red[900]
+      color: () => isDarkMode ? red[200] : red[900]
     },
     {
       key: 'jiraCircularProgress',
       loading: isJiraLoading,
-      color: blue[900]
+      color: () =>isDarkMode ? blue[200] : blue[900]
     }
   ]
 
@@ -340,7 +345,7 @@ const ActionPanel: React.FC<ActionPanelProps> = (props) => {
           onClick={handleFetchBranchDiff}
           disabled={isGithubLoading}
         >
-          <AutoFixHighIcon sx={{ color: 'white' }} />
+          <AutoFixHighIcon />
         </Button>
         {
           circularProgressList.map(circularProgress => circularProgress.loading && (

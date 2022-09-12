@@ -88,16 +88,6 @@ const SettingPanel: React.FC<SettingPanelProps> = (props) => {
           </EditableList>
         </Box>
       </Box>
-      {/* <Box sx={{ display: 'flex', alignItems: 'flex-start', m: 2 }}>
-        <BookIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
-        <EditableList
-          label="repository"
-          list={repos}
-          handleDeleteItem={handleDeleteRepoOption}
-          handleAddItem={handleAddRepoOption}
-        >
-        </EditableList>
-      </Box> */}
 
       <Divider light />
       <Box sx={{ display: 'flex', alignItems: 'center', m: 2 }}>

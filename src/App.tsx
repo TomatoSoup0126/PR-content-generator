@@ -1,21 +1,75 @@
-import { useState, useEffect, SyntheticEvent } from 'react'
+import { useState, useEffect, createContext, useContext, useMemo, SyntheticEvent } from 'react'
 import {
   Option,
   TabPanelProps
 } from './interface'
 
-import Box from '@mui/material/Box'
+import CssBaseline from '@mui/material/CssBaseline'
 
+import IconButton from '@mui/material/IconButton'
+import Box from '@mui/material/Box'
+import Tabs from '@mui/material/Tabs'
+import Tab from '@mui/material/Tab'
+import { useTheme, ThemeProvider, createTheme } from '@mui/material/styles'
+
+import DarkModeIcon from '@mui/icons-material/DarkMode'
+import LightModeIcon from '@mui/icons-material/LightMode'
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh'
 import SettingsIcon from '@mui/icons-material/Settings'
 
-import Tabs from '@mui/material/Tabs'
-import Tab from '@mui/material/Tab'
-
-import ActionPanel from './components/ActionPanel';
+import ActionPanel from './components/ActionPanel'
 import SettingPanel from './components/SettingPanel'
 
+const ColorModeContext = createContext({ toggleColorMode: () => {} })
+
+const ThemeWrapper: React.FC = () => {
+  const [mode, setMode] = useState<'light' | 'dark'>('light')
+  const colorMode = useMemo(
+    () => ({
+      toggleColorMode: () => {
+        setMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light'))
+      },
+    }),
+    [],
+  )
+
+  const theme = useMemo(
+    () =>
+      createTheme({
+        palette: {
+          mode,
+        },
+      }),
+    [mode],
+  )
+
+  const restoreTheme = () => {
+    if (localStorage.getItem('theme')) {
+      const saveMode = JSON.parse(`${localStorage.getItem('theme')}`)
+      if (saveMode !== mode) {
+        setMode(saveMode)
+      }
+    }
+  }
+
+  useEffect(() => {
+    restoreTheme()
+  }, [])
+
+  return (
+    <ColorModeContext.Provider value={colorMode}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <App />
+      </ThemeProvider>
+    </ColorModeContext.Provider>
+  )
+}
+
+
 const App: React.FC = () => {
+  const theme = useTheme()
+  const colorMode = useContext(ColorModeContext)
   const [activeTab, setActiveTab] = useState(0)
 
   const [option, setOption] = useState({
@@ -44,6 +98,11 @@ const App: React.FC = () => {
       setRepos(loadDataFromLocalStorage('repos'))
     }
   }, [])
+
+  const handleSaveTheme = () => {
+    saveDataToLocalStorage('theme', theme.palette.mode === 'dark' ? 'light' : 'dark')
+    colorMode.toggleColorMode()
+  }
 
   const handleUpdateOption = (updateOption:Option) => {
     const newOption:Option = {
@@ -79,7 +138,7 @@ const App: React.FC = () => {
   }
 
   const handleTabChange = (event:SyntheticEvent, newValue: number) => {
-    setActiveTab(newValue);
+    setActiveTab(newValue)
   }
 
   const saveDataToLocalStorage = (key:string, value:Object) => {
@@ -95,7 +154,7 @@ const App: React.FC = () => {
   }
 
   function TabPanel(props: TabPanelProps) {
-    const { children, value, index, ...other } = props;
+    const { children, value, index, ...other } = props
 
     return (
       <div
@@ -116,16 +175,31 @@ const App: React.FC = () => {
 
   return (
     <main className="container mx-auto p-2 pt-0">
-      <Tabs
-        value={activeTab}
-        onChange={handleTabChange}
-        aria-label="icon tabs"
-        sx={{ position: 'sticky', top: 0, backgroundColor: 'white' }}
-        className="z-10"
+      <Box sx={{
+          position: 'sticky',
+          top: 0,
+          backgroundColor: theme.palette.background.default,
+          zIndex: 10
+        }}
       >
-        <Tab icon={<AutoFixHighIcon />} aria-label="phone" />
-        <Tab icon={<SettingsIcon />} aria-label="favorite" />
-      </Tabs>
+        <Tabs
+          value={activeTab}
+          onChange={handleTabChange}
+          aria-label="icon tabs"
+          className="z-10"
+        >
+          <Tab icon={<AutoFixHighIcon />} aria-label="phone" />
+          <Tab icon={<SettingsIcon />} aria-label="favorite" />
+        </Tabs>
+        <div className="absolute top-[8px] right-[4px] z-20">
+          <IconButton
+            onClick={handleSaveTheme}
+            color="inherit"
+          >
+            {theme.palette.mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
+          </IconButton>
+        </div>
+      </Box>
       <TabPanel value={activeTab} index={0}>
         <ActionPanel
           option={option}
@@ -153,4 +227,4 @@ const App: React.FC = () => {
   )
 }
 
-export default App
+export default ThemeWrapper

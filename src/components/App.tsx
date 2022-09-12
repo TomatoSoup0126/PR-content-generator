@@ -1,8 +1,5 @@
-import { useState, useEffect, createContext, useContext, SyntheticEvent } from 'react'
-import {
-  Option,
-  TabPanelProps
-} from '../interface'
+import { useState, useEffect, useContext, SyntheticEvent } from 'react'
+import { Option, TabPanelProps } from '../interface'
 
 import IconButton from '@mui/material/IconButton'
 import Box from '@mui/material/Box'

@@ -1,4 +1,5 @@
 import { app, BrowserWindow, shell, ipcMain } from 'electron'
+const { setUpdateNotification } = require('electron-update-notifier')
 import { release } from 'os'
 import { join } from 'path'
 
@@ -59,7 +60,10 @@ async function createWindow() {
   })
 }
 
-app.whenReady().then(createWindow)
+app.whenReady().then(() => {
+  createWindow()
+  setUpdateNotification()
+})
 
 app.on('window-all-closed', () => {
   win = null

@@ -7,6 +7,7 @@
   "author": "Jonathan Tang <jonathantang0126@gmail.com>",
   "license": "MIT",
   "main": "dist/electron/main/index.js",
+  "repository": "TomatoSoup0126/PR-content-generator",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build && electron-builder"
@@ -18,7 +19,8 @@
     "@emotion/react": "^11.10.4",
     "@emotion/styled": "^11.10.4",
     "@mui/icons-material": "^5.10.3",
-    "@mui/material": "^5.10.3"
+    "@mui/material": "^5.10.3",
+    "electron-update-notifier": "^1.6.0"
   },
   "devDependencies": {
     "@types/react": "^18.0.17",

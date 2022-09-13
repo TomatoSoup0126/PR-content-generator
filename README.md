@@ -4,6 +4,7 @@
 <div align="center">
   <h1>PR Content generator</h1>
 </div>
+
 ## Download
 [Release 2.6](https://github.com/TomatoSoup0126/PR-content-generator/releases/tag/v2.6)
 

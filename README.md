@@ -1,4 +1,11 @@
-# PR Content generator
+<p align="center">
+  <img src="https://github.com/TomatoSoup0126/PR-content-generator/blob/master/public/repo-icon.png?raw=true" width="150px" height="150px">
+</p>
+<div align="center">
+  <h2>PR Content generator</h2>
+</div>
+
+---
 
 ## Download
 [Release 2.6](https://github.com/TomatoSoup0126/PR-content-generator/releases/tag/v2.6)

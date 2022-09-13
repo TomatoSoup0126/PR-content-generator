@@ -206,7 +206,7 @@ const ActionPanel: React.FC<ActionPanelProps> = (props) => {
       const uniqueCommitIds = Array.from(new Set(commitIds))
       Promise.all(uniqueCommitIds.map(id => fetchJiraIssue(id)))
         .then(data => {
-          const excludeStatusList = ['CLOSED']
+          const excludeStatusList = ['Closed']
           const sortedData = data.sort((a, b) => Number(a?.id) - Number(b?.id)).filter(item => !excludeStatusList.some(status => status === item?.status))
           // @ts-ignore
           setJirIssues(sortedData)

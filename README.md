@@ -3,10 +3,9 @@
 </p>
 <div align="center">
   <h1>PR Content generator</h1>
+  <p>Download <a href="https://github.com/TomatoSoup0126/PR-content-generator/releases/tag/3.0.0">Release 3.0.0</a></p>
+  
 </div>
-
-## Download
-[Release 2.6](https://github.com/TomatoSoup0126/PR-content-generator/releases/tag/v2.6)
 
 ## Overview
 - Fetch branch diff by github api
@@ -16,6 +15,11 @@
 
 ![action.png](https://github.com/TomatoSoup0126/PR-content-generator/blob/master/public/action-dark.png?raw=true)
 ![setting.png](https://github.com/TomatoSoup0126/PR-content-generator/blob/master/public/setting-light.png?raw=true)
+
+## Generate token
+- Github: https://github.com/settings/tokens -> Generate new token
+- Redmine: https://redmine.YOURDOMAIN.com/my/account -> API token
+- Jira: https://id.atlassian.com/manage-profile/security/api-tokens -> Create API token
 ## Quick start
 
 ```sh
@@ -37,7 +41,4 @@ npm run build
 - [Material-ui](https://mui.com/)
 - Template by [electron-vite-react](https://github.com/electron-vite/electron-vite-react)
 
-## Generate token
-- Github: https://github.com/settings/tokens -> Generate new token
-- Redmine: https://redmine.YOURDOMAIN.com/my/account -> API token
-- Jira: https://id.atlassian.com/manage-profile/security/api-tokens -> Create API token
+

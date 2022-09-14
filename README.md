@@ -3,8 +3,7 @@
 </p>
 <div align="center">
   <h1>PR Content generator</h1>
-  <p>Download <a href="https://github.com/TomatoSoup0126/PR-content-generator/releases/tag/3.0.0">Release 3.0.0</a></p>
-  
+  <p>Download <a href="https://github.com/TomatoSoup0126/PR-content-generator/releases/tag/3.0.1">Release 3.0.1</a></p>
 </div>
 
 ## Overview

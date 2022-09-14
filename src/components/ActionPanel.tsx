@@ -244,27 +244,27 @@ const ActionPanel: React.FC<ActionPanelProps> = (props) => {
 
   }, [jirIssues, redmineIssues, branchInto, branchFrom])
 
-  const jiraPattern: RegExp = /\[([a-zA-Z\s]+)-\d{4}\]/ // [OW-1234]
+  const jiraPattern: RegExp = /\[([a-zA-Z\s]+)-\d+\]/ // [OW-1234]
   const matchJiraPatternCommit = (commits:String[]) => {
     return commits.filter(commit => commit.match(jiraPattern))
   }
   const getJiraId = (commit: string) => {
     const match = commit.match(jiraPattern)
     if (match) {
-      return `${match[0].match(/[a-zA-Z\s]+-\d{4}/gm)}`
+      return `${match[0].match(/[a-zA-Z\s]+-\d+/gm)}`
     } else {
       return ''
     }
   }
 
-  const redminePattern: RegExp = /\([a-z:]+ #\d{4}\)/ // done #1234
+  const redminePattern: RegExp = /\([a-z:]+ #\d+\)/ // done #1234
   const matchRedminePatternCommit = (commits:String[]) => {
     return commits.filter(commit => commit.match(redminePattern))
   }
   const getRedmineId = (commit: string) => {
     const match = commit.match(redminePattern)
     if (match) {
-      return `${match[0].match(/\d{4}/gm)?.[0]}`
+      return `${match[0].match(/\d+/gm)?.[0]}`
     } else {
       return ''
     }

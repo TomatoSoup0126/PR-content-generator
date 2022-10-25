@@ -110,15 +110,22 @@ const ActionPanel: React.FC<ActionPanelProps> = (props) => {
           }
         }
       )
+
       const res = await response.json()
-      const list = res.commits.map((item: { commit: { message: any } }) => item.commit.message)
+
+      let list = []
+      if (res.commits) {
+        list = res.commits.map((item: { commit: { message: any } }) => item.commit.message)
+      } else {
+        console.debug(res)
+        setErrors([`${response.status} ${res.message} (Github)`])
+      }
 
       setJiraCommits(matchJiraPatternCommit(list))
       setRedmineCommits(matchRedminePatternCommit(list))
-      setIsGithubLoading(false)
     } catch (error) {
       console.error(error)
-      setErrors(['Branch not found'])
+    } finally {
       setIsGithubLoading(false)
     }
   }
@@ -274,17 +281,20 @@ const ActionPanel: React.FC<ActionPanelProps> = (props) => {
     {
       key: 'githubCircularProgress',
       loading: isGithubLoading,
-      color: () => isDarkMode ? grey[200] : grey[900]
+      color: () => isDarkMode ? grey[200] : grey[900],
+      title: 'Github'
     },
     {
       key: 'redmineCircularProgress',
       loading: isRedmineLoading,
-      color: () => isDarkMode ? red[200] : red[900]
+      color: () => isDarkMode ? red[200] : red[900],
+      title: 'Redmine'
     },
     {
       key: 'jiraCircularProgress',
       loading: isJiraLoading,
-      color: () =>isDarkMode ? blue[200] : blue[900]
+      color: () =>isDarkMode ? blue[200] : blue[900],
+      title: 'Jira'
     }
   ]
 
@@ -379,10 +389,16 @@ const ActionPanel: React.FC<ActionPanelProps> = (props) => {
         {
           circularProgressList.map(circularProgress => circularProgress.loading && (
             <Box
-              sx={{ display: 'flex' }}
+              sx={{ display: 'flex', alignItems: 'center' }}
               key={circularProgress.key}
             >
-              <CircularProgress sx={{ ml:2, color: circularProgress.color }} size={30} />
+              <CircularProgress
+                sx={{ ml:2, color: circularProgress.color }}
+                size={30}
+              />
+              <Box sx={{ marginLeft: '16px' }}>
+                { circularProgress.title }
+              </Box>
             </Box>
           ))
         }

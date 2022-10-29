@@ -27,7 +27,7 @@ const IssueBlock: React.FC<IssueBlockProps> = (props) => {
             control={
               <Switch
                 checked={showClosedIssue}
-                onChange={(e) => handleSetShowClosedIssue(e.target.checked)}
+                onChange={(e) => handleSetShowClosedIssue && handleSetShowClosedIssue(e.target.checked)}
               />
             }
             label="Show closed issue"

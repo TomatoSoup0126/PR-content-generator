@@ -94,14 +94,14 @@ const SettingPanel: React.FC<SettingPanelProps> = (props) => {
         <h3 className="w-[24px] mr-[8px] text-white bg-slate-500 text-center rounded-md">R</h3>
         <div className="pl-2">
           <FormControlLabel
-              control={
-                <Switch
-                  checked={childOption.isFetchRedmine ?? true}
-                  onChange={(e) => handleInput(e.target.checked, 'isFetchRedmine')}
-                />
-              }
-              label="Fetch Redmine"
-            />
+            control={
+              <Switch
+                checked={childOption.isFetchRedmine ?? true}
+                onChange={(e) => handleInput(e.target.checked, 'isFetchRedmine')}
+              />
+            }
+            label="Fetch Redmine"
+          />
         </div>
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>

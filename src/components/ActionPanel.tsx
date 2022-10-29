@@ -1,4 +1,4 @@
-import { useState, useEffect, memo } from 'react'
+import { useState, useEffect, useMemo,memo } from 'react'
 import {
   Commit,
   Issue,
@@ -45,7 +45,7 @@ const ActionPanel: React.FC<ActionPanelProps> = (props) => {
   const [repoName, setRepoName] = useState('')
   const [branchFrom, setBranchFrom] = useState('')
   const [branchInto, setBranchInto] = useState('')
-  const [title, setTitle] = useState('')
+  // const [title, setTitle] = useState('')
   const [isGithubLoading, setIsGithubLoading] = useState(false)
   const [isRedmineLoading, setIsRedmineLoading] = useState(false)
   const [isJiraLoading, setIsJiraLoading] = useState(false)
@@ -56,13 +56,35 @@ const ActionPanel: React.FC<ActionPanelProps> = (props) => {
   const [redmineCommits, setRedmineCommits] = useState<String[] | undefined[]>([])
   const [redmineIssues, setRedmineIssues] = useState<Commit[] | undefined[]>([])
 
+  const [isShowClosedIssueOnJira, setIsShowClosedIssueOnJira] = useState(true)
+  const [isShowClosedIssueOnRedmine, setIsShowClosedIssueOnRedmine] = useState(true)
+
+  const filteredJiraIssues = useMemo(() => {
+    if (isShowClosedIssueOnJira) {
+      return jirIssues
+    }
+    return jirIssues.filter(issue => {
+      return !['Closed'].some(closeTag => issue.status === closeTag)
+    })
+  }, [isShowClosedIssueOnJira, jirIssues])
+
+  const filteredRedmineIssues = useMemo(() => {
+    if (isShowClosedIssueOnRedmine) {
+      return redmineIssues
+    }
+    return redmineIssues.filter(issue => {
+      return !['Close', 'On Production'].some(closeTag => issue.status === closeTag)
+    })
+  }, [isShowClosedIssueOnRedmine, redmineIssues])
+
   const handleCopyRedmineIssues = () => {
-    const copyContent = redmineIssues.map(issue => issue?.markdown).join('\r\n')
+    console.log(filteredRedmineIssues, filteredRedmineIssues)
+    const copyContent = filteredRedmineIssues.map(issue => issue?.markdown).join('\r\n')
     writeToClipboard(copyContent)
   }
 
   const handleCopyJiraIssues = () => {
-    const copyContent = jirIssues.map(issue => issue?.markdown).join('\r\n')
+    const copyContent = filteredJiraIssues.map(issue => issue?.markdown).join('\r\n')
     writeToClipboard(copyContent)
   }
 
@@ -195,8 +217,7 @@ const ActionPanel: React.FC<ActionPanelProps> = (props) => {
       const uniqueCommitIds = Array.from(new Set(commitIds))
       Promise.all(uniqueCommitIds.map(id => fetchRedmineIssue(id)))
         .then(data => {
-          const excludeStatusList = ['Close', 'On Production']
-          const sortedData = data.sort((a, b) => Number(a?.id) - Number(b?.id)).filter(item => !excludeStatusList.some(status => status === item?.status))
+          const sortedData = data.sort((a, b) => Number(a?.id) - Number(b?.id))
           // @ts-ignore
           setRedmineIssues(sortedData)
           setIsRedmineLoading(false)
@@ -213,8 +234,7 @@ const ActionPanel: React.FC<ActionPanelProps> = (props) => {
       const uniqueCommitIds = Array.from(new Set(commitIds))
       Promise.all(uniqueCommitIds.map(id => fetchJiraIssue(id)))
         .then(data => {
-          const excludeStatusList = ['Closed']
-          const sortedData = data.sort((a, b) => Number(a?.id) - Number(b?.id)).filter(item => !excludeStatusList.some(status => status === item?.status))
+          const sortedData = data.sort((a, b) => Number(a?.id) - Number(b?.id))
           // @ts-ignore
           setJirIssues(sortedData)
           setIsJiraLoading(false)
@@ -231,25 +251,23 @@ const ActionPanel: React.FC<ActionPanelProps> = (props) => {
     master: 'production'
   }
 
-  useEffect(() => {
+  const title = useMemo(() => {
     let jiraIdInTitle = ''
     let redmineIdsInTitle = ''
-    if (option.isFetchJira && jirIssues.length > 0) {
-      const jiraIds = jirIssues.map(issue => `[${issue?.id}]`)
+    if (option.isFetchJira && filteredJiraIssues.length > 0) {
+      const jiraIds = filteredJiraIssues.map(issue => `[${issue?.id}]`)
       jiraIdInTitle = jiraIds.join('')
     }
-    if (option.isFetchRedmine && redmineIssues.length > 0) {
-      const redmineIds = redmineIssues.map(issue => `#${issue?.id}`)
+    if (option.isFetchRedmine && filteredRedmineIssues.length > 0) {
+      const redmineIds = filteredRedmineIssues.map(issue => `#${issue?.id}`)
       const redmineTag = redmineTagMap[branchInto] || ''
       redmineIdsInTitle = `(${redmineTag} ${redmineIds.join(', ')})`
     }
     if (branchFrom && branchInto) {
-      setTitle(`[${branchInto}]${jiraIdInTitle} update from ${branchFrom} ${redmineIdsInTitle}`)
-    } else {
-      setTitle('')
+      return `[${branchInto}]${jiraIdInTitle} update from ${branchFrom} ${redmineIdsInTitle}`
     }
-
-  }, [jirIssues, redmineIssues, branchInto, branchFrom])
+    return ''
+  }, [branchFrom, branchInto, filteredJiraIssues, filteredRedmineIssues])
 
   const jiraPattern: RegExp = /\[([a-zA-Z\s]+)-\d+\]/ // [OW-1234]
   const matchJiraPatternCommit = (commits:String[]) => {
@@ -309,16 +327,20 @@ const ActionPanel: React.FC<ActionPanelProps> = (props) => {
     {
       title: 'Jira Issue',
       displayRole: !isJiraLoading && jirIssues.length > 0,
-      issues: jirIssues,
+      issues: filteredJiraIssues,
       content: '',
       handleCopyEvent: handleCopyJiraIssues,
+      handleSetShowClosedIssue: setIsShowClosedIssueOnJira,
+      showClosedIssue: isShowClosedIssueOnJira
     },
     {
       title: 'Redmine Issue',
       displayRole: !isRedmineLoading && redmineIssues.length > 0,
-      issues: redmineIssues,
+      issues: filteredRedmineIssues,
       content: '',
       handleCopyEvent: handleCopyRedmineIssues,
+      handleSetShowClosedIssue: setIsShowClosedIssueOnRedmine,
+      showClosedIssue: isShowClosedIssueOnRedmine
     },
   ]
 
@@ -413,6 +435,8 @@ const ActionPanel: React.FC<ActionPanelProps> = (props) => {
               issues={resultBlock.issues}
               content={resultBlock.content}
               handleCopyEvent={resultBlock.handleCopyEvent}
+              handleSetShowClosedIssue={resultBlock.handleSetShowClosedIssue}
+              showClosedIssue={resultBlock.showClosedIssue}
             >
             </IssueBlock>
           )

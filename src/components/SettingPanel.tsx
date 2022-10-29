@@ -4,7 +4,7 @@ import TextField from '@mui/material/TextField'
 import Divider from '@mui/material/Divider'
 import FormGroup from '@mui/material/FormGroup'
 import FormControlLabel from '@mui/material/FormControlLabel'
-import SpeedDial from '@mui/material/SpeedDial'
+import Button from '@mui/material/Button';
 import Switch from '@mui/material/Switch'
 import KeyIcon from '@mui/icons-material/Key'
 import BookIcon from '@mui/icons-material/Book';
@@ -172,13 +172,14 @@ const SettingPanel: React.FC<SettingPanelProps> = (props) => {
         />
       </Box>
       <Box sx={{ height: 64 }} />
-      <SpeedDial
-        ariaLabel="save"
-        sx={{ position: 'fixed', bottom: 16, right: 16 }}
-        icon={<SaveIcon />}
+      <Button
+        sx={{ position: 'fixed', bottom: 16, right: 36}}
+        variant="contained"
+        startIcon={<SaveIcon />}
         onClick={() => handleUpdateOption(childOption)}
       >
-      </SpeedDial>
+        Save config
+      </Button>
     </>
   )
 }

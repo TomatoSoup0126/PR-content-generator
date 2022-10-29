@@ -1,10 +1,12 @@
-import { useState, useEffect, useContext, SyntheticEvent } from 'react'
+import { useState, useEffect, useContext, SyntheticEvent, forwardRef } from 'react'
 import { Option, TabPanelProps } from '../interface'
 
 import IconButton from '@mui/material/IconButton'
 import Box from '@mui/material/Box'
 import Tabs from '@mui/material/Tabs'
 import Tab from '@mui/material/Tab'
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert, { AlertProps } from '@mui/material/Alert';
 import { useTheme } from '@mui/material/styles'
 
 import DarkModeIcon from '@mui/icons-material/DarkMode'
@@ -36,6 +38,8 @@ const App: React.FC = () => {
   const [branches, setBranches] = useState<String[]>(['dev', 'release', 'master'])
   const [repos, setRepos] = useState<String[]>(['demo_repo'])
 
+  const [isShowOptionSuccess, setIsShowOptionSuccess] = useState(false)
+
   // restore option on mounted
   useEffect(() => {
     if (loadDataFromLocalStorage('option')) {
@@ -54,6 +58,13 @@ const App: React.FC = () => {
     colorMode.toggleColorMode()
   }
 
+  const Alert = forwardRef<HTMLDivElement, AlertProps>(function Alert(
+    props,
+    ref,
+  ) {
+    return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+  });
+
   const handleUpdateOption = (updateOption:Option) => {
     const newOption:Option = {
       ...updateOption
@@ -61,6 +72,15 @@ const App: React.FC = () => {
     // @ts-ignore
     setOption(newOption)
     saveDataToLocalStorage('option', newOption)
+    saveOptionSuccess()
+  }
+
+  const handleSnackbarClose = () => {
+    setIsShowOptionSuccess(false)
+  }
+
+  const saveOptionSuccess = () => {
+    setIsShowOptionSuccess(true);
   }
 
   const handleDeleteBranchOption = (deleteItem:string) => {
@@ -125,6 +145,20 @@ const App: React.FC = () => {
 
   return (
     <main className="container mx-auto p-2 pt-0">
+      <Snackbar
+        open={isShowOptionSuccess}
+        autoHideDuration={6000}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        onClose={handleSnackbarClose}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity="success"
+          sx={{ width: '100%' }}
+        >
+          Save success!
+        </Alert>
+      </Snackbar>
       <Box sx={{
           position: 'sticky',
           top: 0,

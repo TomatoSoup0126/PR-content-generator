@@ -173,12 +173,18 @@ const SettingPanel: React.FC<SettingPanelProps> = (props) => {
       </Box>
       <Box sx={{ height: 64 }} />
       <Button
-        sx={{ position: 'fixed', bottom: 16, right: 36}}
+        sx={{
+          position: 'fixed',
+          bottom: 16,
+          right: 36,
+          borderRadius: '100%',
+          minWidth: 0,
+          padding: '12px'
+        }}
         variant="contained"
-        startIcon={<SaveIcon />}
         onClick={() => handleUpdateOption(childOption)}
       >
-        Save config
+        <SaveIcon />
       </Button>
     </>
   )

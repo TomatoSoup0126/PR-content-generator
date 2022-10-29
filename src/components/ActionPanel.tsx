@@ -45,7 +45,6 @@ const ActionPanel: React.FC<ActionPanelProps> = (props) => {
   const [repoName, setRepoName] = useState('')
   const [branchFrom, setBranchFrom] = useState('')
   const [branchInto, setBranchInto] = useState('')
-  // const [title, setTitle] = useState('')
   const [isGithubLoading, setIsGithubLoading] = useState(false)
   const [isRedmineLoading, setIsRedmineLoading] = useState(false)
   const [isJiraLoading, setIsJiraLoading] = useState(false)
@@ -63,8 +62,9 @@ const ActionPanel: React.FC<ActionPanelProps> = (props) => {
     if (isShowClosedIssueOnJira) {
       return jirIssues
     }
-    return jirIssues.filter(issue => {
-      return !['Closed'].some(closeTag => issue.status === closeTag)
+    // @ts-ignore
+    return jirIssues.filter((issue: { status: string } ) => {
+      return !['Closed'].some(closeTag => issue?.status === closeTag)
     })
   }, [isShowClosedIssueOnJira, jirIssues])
 
@@ -72,19 +72,19 @@ const ActionPanel: React.FC<ActionPanelProps> = (props) => {
     if (isShowClosedIssueOnRedmine) {
       return redmineIssues
     }
-    return redmineIssues.filter(issue => {
-      return !['Close', 'On Production'].some(closeTag => issue.status === closeTag)
+    // @ts-ignore
+    return redmineIssues.filter((issue: { status: string }) => {
+      return !['Close', 'On Production'].some(closeTag => issue?.status === closeTag)
     })
   }, [isShowClosedIssueOnRedmine, redmineIssues])
 
   const handleCopyRedmineIssues = () => {
-    console.log(filteredRedmineIssues, filteredRedmineIssues)
-    const copyContent = filteredRedmineIssues.map(issue => issue?.markdown).join('\r\n')
+    const copyContent = filteredRedmineIssues.map((issue: { markdown: string }) => issue?.markdown).join('\r\n')
     writeToClipboard(copyContent)
   }
 
   const handleCopyJiraIssues = () => {
-    const copyContent = filteredJiraIssues.map(issue => issue?.markdown).join('\r\n')
+    const copyContent = filteredJiraIssues.map((issue: { markdown: string }) => issue?.markdown).join('\r\n')
     writeToClipboard(copyContent)
   }
 
@@ -255,11 +255,11 @@ const ActionPanel: React.FC<ActionPanelProps> = (props) => {
     let jiraIdInTitle = ''
     let redmineIdsInTitle = ''
     if (option.isFetchJira && filteredJiraIssues.length > 0) {
-      const jiraIds = filteredJiraIssues.map(issue => `[${issue?.id}]`)
+      const jiraIds = filteredJiraIssues.map((issue: { id: string }) => `[${issue?.id}]`)
       jiraIdInTitle = jiraIds.join('')
     }
     if (option.isFetchRedmine && filteredRedmineIssues.length > 0) {
-      const redmineIds = filteredRedmineIssues.map(issue => `#${issue?.id}`)
+      const redmineIds = filteredRedmineIssues.map((issue: { id: string }) => `#${issue?.id}`)
       const redmineTag = redmineTagMap[branchInto] || ''
       redmineIdsInTitle = `(${redmineTag} ${redmineIds.join(', ')})`
     }

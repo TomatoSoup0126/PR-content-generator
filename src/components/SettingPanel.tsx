@@ -4,7 +4,7 @@ import TextField from '@mui/material/TextField'
 import Divider from '@mui/material/Divider'
 import FormGroup from '@mui/material/FormGroup'
 import FormControlLabel from '@mui/material/FormControlLabel'
-import SpeedDial from '@mui/material/SpeedDial'
+import Button from '@mui/material/Button';
 import Switch from '@mui/material/Switch'
 import KeyIcon from '@mui/icons-material/Key'
 import BookIcon from '@mui/icons-material/Book';
@@ -94,14 +94,14 @@ const SettingPanel: React.FC<SettingPanelProps> = (props) => {
         <h3 className="w-[24px] mr-[8px] text-white bg-slate-500 text-center rounded-md">R</h3>
         <div className="pl-2">
           <FormControlLabel
-              control={
-                <Switch
-                  checked={childOption.isFetchRedmine ?? true}
-                  onChange={(e) => handleInput(e.target.checked, 'isFetchRedmine')}
-                />
-              }
-              label="Fetch Redmine"
-            />
+            control={
+              <Switch
+                checked={childOption.isFetchRedmine ?? true}
+                onChange={(e) => handleInput(e.target.checked, 'isFetchRedmine')}
+              />
+            }
+            label="Fetch Redmine"
+          />
         </div>
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'flex-end', m: 2 }}>
@@ -172,13 +172,20 @@ const SettingPanel: React.FC<SettingPanelProps> = (props) => {
         />
       </Box>
       <Box sx={{ height: 64 }} />
-      <SpeedDial
-        ariaLabel="save"
-        sx={{ position: 'fixed', bottom: 16, right: 16 }}
-        icon={<SaveIcon />}
+      <Button
+        sx={{
+          position: 'fixed',
+          bottom: 16,
+          right: 36,
+          borderRadius: '100%',
+          minWidth: 0,
+          padding: '12px'
+        }}
+        variant="contained"
         onClick={() => handleUpdateOption(childOption)}
       >
-      </SpeedDial>
+        <SaveIcon />
+      </Button>
     </>
   )
 }

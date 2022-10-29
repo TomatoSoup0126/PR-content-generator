@@ -47,6 +47,8 @@ export interface IssueBlockProps {
   issues: (Commit[] | undefined[])
   content?: String
   handleCopyEvent: Function
+  handleSetShowClosedIssue?: Function
+  showClosedIssue?: boolean
   children?: ReactNode
 }
 

@@ -2,7 +2,7 @@
   "name": "pr-content-generator",
   "productName": "Electron",
   "private": true,
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "PR-content-generator",
   "author": "Jonathan Tang <jonathantang0126@gmail.com>",
   "license": "MIT",

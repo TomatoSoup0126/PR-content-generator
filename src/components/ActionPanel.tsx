@@ -153,51 +153,55 @@ const ActionPanel: React.FC<ActionPanelProps> = (props) => {
   }
 
   async function fetchRedmineIssue(id:string | null | undefined) {
-    const url = `${option.redminePath}/issues/${id}.json?key=${option.redmineToken}`
-    try {
-      const response = await fetch(url)
-      const res = await response.json()
-      const { id, subject, status } = res.issue
-      const data: Issue = {
-        id,
-        subject,
-        status: status.name,
-        markdown: `- ${subject} [redmine #${id}](${option.redminePath}/issues/${id})`
+    if (id) {
+      const url = `${option.redminePath}/issues/${id}.json?key=${option.redmineToken}`
+      try {
+        const response = await fetch(url)
+        const res = await response.json()
+        const { id, subject, status } = res.issue
+        const data: Issue = {
+          id,
+          subject,
+          status: status.name,
+          markdown: `- ${subject} [redmine #${id}](${option.redminePath}/issues/${id})`
+        }
+        return Promise.resolve(data)
+      } catch (error) {
+        console.error(error)
+        // @ts-ignore
+        const updateErrors:String[] = [...errors, 'Redmine fetch error']
+        setErrors(updateErrors)
       }
-      return Promise.resolve(data)
-    } catch (error) {
-      console.error(error)
-      // @ts-ignore
-      const updateErrors:String[] = [...errors, 'Redmine fetch error']
-      setErrors(updateErrors)
     }
   }
 
-  async function fetchJiraIssue(id:string) {
-    const url = `${option.jiraPath}/rest/api/latest/issue/${id}`
-    const auth = Buffer.from(`${option.jiraAccount}:${option.jiraToken}`).toString('base64')
-    try {
-      const response = await fetch(
-        url,
-        {
-          headers: {
-            'Authorization': `Basic ${auth}`
+  async function fetchJiraIssue(id:string | null | undefined) {
+    if (id) {
+      const url = `${option.jiraPath}/rest/api/latest/issue/${id}`
+      const auth = Buffer.from(`${option.jiraAccount}:${option.jiraToken}`).toString('base64')
+      try {
+        const response = await fetch(
+          url,
+          {
+            headers: {
+              'Authorization': `Basic ${auth}`
+            }
           }
+        )
+        const { fields } = await response.json()
+        const data: Issue = {
+          id,
+          subject: fields.summary,
+          status: fields.status.name,
+          markdown: `- ${fields.summary} [${id}](${option.jiraPath}/browse/${id})`
         }
-      )
-      const { fields } = await response.json()
-      const data: Issue = {
-        id,
-        subject: fields.summary,
-        status: fields.status.name,
-        markdown: `- ${fields.summary} [${id}](${option.jiraPath}/browse/${id})`
+        return Promise.resolve(data)
+      } catch (error) {
+        console.error(error)
+        // @ts-ignore
+        const updateErrors:String[] = [...errors, 'Jira fetch error']
+        setErrors(updateErrors)
       }
-      return Promise.resolve(data)
-    } catch (error) {
-      console.error(error)
-      // @ts-ignore
-      const updateErrors:String[] = [...errors, 'Jira fetch error']
-      setErrors(updateErrors)
     }
   }
 
@@ -213,8 +217,8 @@ const ActionPanel: React.FC<ActionPanelProps> = (props) => {
   useEffect(() => {
     if (redmineCommits.length > 0 && option.isFetchRedmine) {
       setIsRedmineLoading(true)
-      const commitIds = redmineCommits.map(commit => getRedmineId(`${commit}`))
-      const uniqueCommitIds = Array.from(new Set(commitIds))
+      const commitIdGroups = redmineCommits.map(commit => getRedmineIds(`${commit}`))
+      const uniqueCommitIds = Array.from(new Set(commitIdGroups.flat()))
       Promise.all(uniqueCommitIds.map(id => fetchRedmineIssue(id)))
         .then(data => {
           const sortedData = data.sort((a, b) => Number(a?.id) - Number(b?.id))
@@ -230,8 +234,8 @@ const ActionPanel: React.FC<ActionPanelProps> = (props) => {
   useEffect(() => {
     if (jiraCommits.length > 0 && option.isFetchJira) {
       setIsJiraLoading(true)
-      const commitIds = jiraCommits.map(commit => getJiraId(`${commit}`))
-      const uniqueCommitIds = Array.from(new Set(commitIds))
+      const commitIdGroups = jiraCommits.map(commit => getJiraIds(`${commit}`))
+      const uniqueCommitIds = Array.from(new Set(commitIdGroups.flat()))
       Promise.all(uniqueCommitIds.map(id => fetchJiraIssue(id)))
         .then(data => {
           const sortedData = data.sort((a, b) => Number(a?.id) - Number(b?.id))
@@ -273,25 +277,25 @@ const ActionPanel: React.FC<ActionPanelProps> = (props) => {
   const matchJiraPatternCommit = (commits:String[]) => {
     return commits.filter(commit => commit.match(jiraPattern))
   }
-  const getJiraId = (commit: string) => {
+  const getJiraIds = (commit: string) => {
     const match = commit.match(jiraPattern)
     if (match) {
-      return `${match[0].match(/[a-zA-Z\s]+-\d+/gm)}`
+      return match[0].match(/[a-zA-Z\s]+-\d+/gm)
     } else {
-      return ''
+      return []
     }
   }
 
-  const redminePattern: RegExp = /\([a-z:]+ #\d+\)/ // done #1234
+  const redminePattern: RegExp = /\([a-z:]+((\s|,)*#+\d+)+\)/ // done #1234
   const matchRedminePatternCommit = (commits:String[]) => {
     return commits.filter(commit => commit.match(redminePattern))
   }
-  const getRedmineId = (commit: string) => {
+  const getRedmineIds = (commit: string) => {
     const match = commit.match(redminePattern)
     if (match) {
-      return `${match[0].match(/\d+/gm)?.[0]}`
+      return match[0].match(/\d+/gm)
     } else {
-      return ''
+      return []
     }
   }
 
